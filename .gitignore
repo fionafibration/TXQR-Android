@@ -7,3 +7,9 @@
 build/
 
 .flutter-plugins
+
+.idea
+
+.vscode
+
+local.properties
