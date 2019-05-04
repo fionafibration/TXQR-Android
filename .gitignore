@@ -13,3 +13,5 @@ build/
 .vscode
 
 local.properties
+
+TxQRWorkapce.code-workspace
