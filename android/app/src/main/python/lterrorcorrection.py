@@ -49,7 +49,7 @@ from java.lang import String, Thread
 from java.io import FileNotFoundException, EOFException
 from java.lang import Error, RuntimeException
 
-LOGGER = jclass('maxpaulson.org.txqr_fincryptmessaging.logThePython')()
+LOGGER = jclass('dev.novalogic.txqrfincrypt.logThePython')()
 
 DEFAULT_C = 0.1
 DEFAULT_DELTA = 0.5

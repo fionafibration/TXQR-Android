@@ -21,7 +21,7 @@ class HomePage extends StatefulWidget {
 class HomePageState extends State<HomePage> {
   String result = "Hey there !";
   static const platform = const MethodChannel('tx.novalogic.dev/fincrypt');
-
+  static final _notDone = 'DECODE.NOT_DONE';
   // Get the message
   String _message = 'No Message';
 
@@ -42,8 +42,13 @@ class HomePageState extends State<HomePage> {
   Future _scanQR() async {
     try {
       String qrResult = await BarcodeScanner.scan();
-      setState(() {
-        result = qrResult;
+      setState(() async {
+        await _getMessage(qrResult);
+        if (_message == _notDone) {
+          _scanQR();
+        } else {
+          result = _message;
+        }
       });
     } on PlatformException catch (ex) {
       if (ex.code == BarcodeScanner.CameraAccessDenied) {
