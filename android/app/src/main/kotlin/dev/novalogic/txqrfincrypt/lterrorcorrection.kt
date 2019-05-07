@@ -1,11 +1,14 @@
 package dev.novalogic.txqrfincrypt
 
+import java.lang.Exception
+import java.nio.ByteBuffer
+import java.util.stream.Collectors
+import java.util.zip.Inflater
 import kotlin.math.*
-import java.math.BigInteger
 import kotlin.experimental.xor
 import kotlin.experimental.and
 
-fun gen_tau(s: Double, k: Int, delta: Double): MutableList<Double> {
+fun genTau(s: Double, k: Int, delta: Double): MutableList<Double> {
 
     val pivot = floor(k / s).toInt()
     val distribution = mutableListOf<Double>()
@@ -23,7 +26,7 @@ fun gen_tau(s: Double, k: Int, delta: Double): MutableList<Double> {
     return distribution
 }
 
-fun gen_rho(k: Int): MutableList<Double> {
+fun genRho(k: Int): MutableList<Double> {
     val distribution = mutableListOf<Double>()
 
     distribution.add(1 / k.toDouble())
@@ -35,11 +38,11 @@ fun gen_rho(k: Int): MutableList<Double> {
     return distribution
 }
 
-fun gen_mu(k: Int, delta: Double, c: Double): MutableList<Double> {
-    val S = c * log(k.toDouble() / delta, E) * sqrt(k.toDouble())
+fun genMu(k: Int, delta: Double, c: Double): MutableList<Double> {
+    val s = c * log(k.toDouble() / delta, E) * sqrt(k.toDouble())
 
-    val tau = gen_tau(S, k, delta)
-    val rho = gen_rho(k)
+    val tau = genTau(s, k, delta)
+    val rho = genRho(k)
     val normalizer = rho.sum() + tau.sum()
 
     val distribution = mutableListOf<Double>()
@@ -51,8 +54,8 @@ fun gen_mu(k: Int, delta: Double, c: Double): MutableList<Double> {
     return distribution
 }
 
-fun gen_rsd_cdf(k: Int, delta: Double, c: Double): MutableList<Double> {
-    val mu = gen_mu(k, delta, c)
+fun genRsdCdf(k: Int, delta: Double, c: Double): MutableList<Double> {
+    val mu = genMu(k, delta, c)
     val distribution = mutableListOf<Double>()
 
     for (d in 0 until k) {
@@ -62,28 +65,26 @@ fun gen_rsd_cdf(k: Int, delta: Double, c: Double): MutableList<Double> {
     return distribution
 }
 
-val PRNG_A = 16807
-val PRNG_M = (BigInteger("1") shl 31) - BigInteger("1")
-val PRNG_MAX_RAND = PRNG_M - BigInteger("1")
+const val PRNG_A = 16807L
+const val PRNG_M = (1L shl 31) - 1L
+const val PRNG_MAX_RAND = PRNG_M - 1L
 
-class RSD_PRNG {
-    private val k: Int
-    private var state: BigInteger
+class RobustSolitonDistributionPRNG(private val k: Int) {
+    private var state: Long
     private val cdf: MutableList<Double>
 
-    constructor(k: Int) {
-        this.k = k
-        this.state = BigInteger("0")
-        this.cdf = gen_rsd_cdf(this.k, 0.5, 0.1)
+    init {
+        this.state = 0
+        this.cdf = genRsdCdf(this.k, 0.5, 0.1)
     }
 
-    private fun get_next(): BigInteger {
-        this.state = PRNG_A.toBigInteger() * this.state % PRNG_M
+    private fun getNext(): Long {
+        this.state = PRNG_A * this.state % PRNG_M
         return this.state
     }
 
-    private fun sample_d(): Int {
-        val p = this.get_next() / PRNG_MAX_RAND
+    private fun sampleD(): Int {
+        val p = this.getNext() / PRNG_MAX_RAND
         for (i in 0 until this.cdf.size) {
             val v = this.cdf[i]
             if (v.toBigDecimal() > p.toBigDecimal()) {
@@ -93,36 +94,32 @@ class RSD_PRNG {
         return this.cdf.size
     }
 
-    fun set_seed(seed: BigInteger) {
-        this.state = seed
-    }
-
-    fun get_src_blocks(seed: BigInteger?): Map<String, Any> {
+    fun getSourceBlocks(seed: Long?): Pair<Long, MutableSet<Int>> {
         val blockseed = this.state
 
         if (seed != null) {
             this.state = seed
         }
 
-        val d = this.sample_d()
+        val d = this.sampleD()
 
         var have = 0
 
         val nums = mutableSetOf<Int>()
 
         while (have < d) {
-            val num = this.get_next() % this.k.toBigInteger()
+            val num = this.getNext() % this.k.toLong()
 
             if (!nums.contains(num.toInt())) {
                 nums.add(num.toInt())
                 have += 1
             }
         }
-        return mapOf("blockseed" to blockseed, "d" to d, "nums" to nums)
+        return Pair(blockseed, nums)
     }
 }
 
-fun xor_byte_array(a: ByteArray, b: ByteArray): ByteArray? {
+fun xorByteArray(a: ByteArray, b: ByteArray): ByteArray? {
     if (a.size == b.size) {
         a.mapIndexed { index, byte ->
             return ByteArray(byte.xor(b[index]).toInt())
@@ -133,87 +130,91 @@ fun xor_byte_array(a: ByteArray, b: ByteArray): ByteArray? {
 
 class BlockNode(var src_nodes: MutableSet<Int>, var check: ByteArray)
 
-class BlockGraph(var num_blocks: Int){
-    val checks: MutableMap<Int, MutableList<BlockNode>> = mutableMapOf()
-    val eliminated: MutableMap<Int, ByteArray>
 
-    init {
-        this.eliminated = mutableMapOf()
-    }
+class BlockGraph(private var k: Int) {
+    private val checks: MutableMap<Int, MutableList<BlockNode>> = mutableMapOf()
+    val eliminated: MutableMap<Int, ByteArray> = mutableMapOf()
 
-    fun add_block(nodes: MutableSet<Int>, in_data: ByteArray): Pair<Double, Boolean> {
+    fun addBlock(nodes: MutableSet<Int>, in_data: ByteArray): Pair<Double, Boolean> {
         var data = in_data
         if (nodes.size == 1) {
-            val to_eliminate = this.eliminate(nodes.sorted()[0], data)
+            val toEliminate = this.eliminate(nodes.sorted()[0], data)
 
-            while (to_eliminate.size != 0) {
-                val element = to_eliminate.removeAt(to_eliminate.lastIndex)
+            while (toEliminate.size != 0) {
+                val element = toEliminate.removeAt(toEliminate.lastIndex)
                 val other = element.first
                 val check = element.second
-                to_eliminate.addAll(this.eliminate(other, check))
+                toEliminate.addAll(this.eliminate(other, check))
             }
         } else {
             nodes.toList().forEach {
                 if (this.eliminated.keys.contains(it)) {
                     nodes.remove(it)
-                    data = xor_byte_array(data,
+                    data = xorByteArray(data,
                             this.eliminated.getOrDefault(it, ByteArray(0))
                     )!!
                 }
             }
 
             if (nodes.size == 1) {
-                return this.add_block(nodes, data)
-            } else:
-            val check = BlockNode(nodes, data)
-            nodes.forEach {
-                this.checks[it]?.add(check)
+                return this.addBlock(nodes, data)
+            } else {
+                val check = BlockNode(nodes, data)
+                nodes.forEach {
+                    this.checks[it]?.add(check)
+                }
             }
         }
 
-        return Pair<Double, Boolean>(
-                this.eliminated.size.toDouble() / this.num_blocks.toDouble(),
-                this.eliminated.size >= this.num_blocks
-            )
+        return Pair(
+                this.eliminated.size.toDouble() / this.k.toDouble(),
+                this.eliminated.size >= this.k
+        )
     }
 
-    fun eliminate(node: Int, data: ByteArray): MutableList<Pair<Int, ByteArray>> {
-        this.eliminated.put(node, data)
+    private fun eliminate(node: Int, data: ByteArray): MutableList<Pair<Int, ByteArray>> {
+        this.eliminated[node] = data
 
         var others = this.checks[node]
 
         if (others.isNullOrEmpty()) {
-            others = mutableListOf<BlockNode>()
+            others = mutableListOf()
         }
 
         this.checks.remove(node)
 
-        val extra_blocks = mutableListOf<Pair<Int, ByteArray>>()
+        val additionalBlocks = mutableListOf<Pair<Int, ByteArray>>()
 
         others.forEach {
-            it.check = xor_byte_array(it.check, data)!!
+            it.check = xorByteArray(it.check, data)!!
             it.src_nodes.remove(node)
 
             if (it.src_nodes.size == 1) {
                 val block = it.src_nodes.sorted()[0]
                 val check = it.check
 
-                extra_blocks.add(Pair<Int, ByteArray>(block, check))
+                additionalBlocks.add(Pair(block, check))
             }
         }
-        return extra_blocks
+        return additionalBlocks
     }
 }
 
-class LTDecoder() {
-    var k: Int
-    var filesize: Int
-    var blocksize: Int
+class BlockData(val magic_byte: Byte, val filesize: Int, val blocksize: Int,
+                val blockseed: Int, val block: ByteArray)
+
+class NotDecodedException(message : String) : Exception(message)
+
+class LTDecoder {
+    private var k: Int
+    private var filesize: Int
+    private var blocksize: Int
+
     var done: Boolean
     var compressed: Boolean
 
-    var block_graph: BlockGraph?
-    var prng: RSD_PRNG?
+    private var blockGraph: BlockGraph?
+    private var prng: RobustSolitonDistributionPRNG?
 
     var initialized: Boolean
 
@@ -223,24 +224,20 @@ class LTDecoder() {
         this.blocksize = 0
         this.done = false
         this.compressed = false
-        this.block_graph = null
-        this.block_graph = null
+        this.blockGraph = null
         this.prng = null
         this.initialized = false
     }
 
-    fun is_done(): Boolean {
-        return this.done
-    }
 
-    fun consume_block(lt_block: Map<String, Any>) : Double {
-        val magic_byte = lt_block["magic_byte"] as Byte
-        val filesize = lt_block["filesize"] as Int
-        val blocksize = lt_block["blocksize"] as Int
-        val blockseed = lt_block["blockseed"] as Int
-        val block = lt_block["block"] as ByteArray
+    private fun consumeBlock(lt_block: BlockData): Double {
+        val magicByte = lt_block.magic_byte
+        val filesize = lt_block.filesize
+        val blocksize = lt_block.blocksize
+        val blockseed = lt_block.blockseed
+        val block = lt_block.block
 
-        if (magic_byte and 0x01 != 0.toByte()) {
+        if (magicByte and 0x01.toByte() != 0.toByte()) {
             this.compressed = true
         }
 
@@ -249,19 +246,76 @@ class LTDecoder() {
             this.blocksize = blocksize
 
             this.k = ceil(filesize.toFloat() / blocksize.toFloat()).toInt()
-            this.block_graph = BlockGraph(this.k)
-            this.prng = RSD_PRNG(this.k)
+            this.blockGraph = BlockGraph(this.k)
+            this.prng = RobustSolitonDistributionPRNG(this.k)
             this.initialized = true
         }
 
-        val src_blocks = this.prng!!.get_src_blocks(blockseed.toBigInteger())
+        val sourceBlocks = this.prng!!.getSourceBlocks(blockseed.toLong())
 
-        block_result = this.handle_block((src_blocks as MutableMap<String, Any>)["nums"] as MutableSet<Int>, block)
+        val blockResult = this.handleBlock(sourceBlocks.second, block)
 
-        return block_result.first
+        return blockResult.first
     }
 
-    fun handle_block(src_blocks : MutableSet<Int>, block : ByteArray) : Pair<Double, Boolean> {
-        return this.block_graph.add_block(src_blocks, block)
+    private fun handleBlock(src_blocks: MutableSet<Int>, block: ByteArray): Pair<Double, Boolean> {
+        return this.blockGraph!!.addBlock(src_blocks, block)
+    }
+
+    fun decoodeBytes(block_bytes: ByteArray): Double {
+        val magicByte = block_bytes[0]
+        val header = block_bytes.slice(IntRange(1, 13))
+        val rest = block_bytes.slice(IntRange(0, block_bytes.lastIndex))
+
+        val headerBuffer = ByteBuffer.allocate(12).put(header.toByteArray())
+
+        val blockData = BlockData(
+                magicByte,
+                headerBuffer.getInt(0),
+                headerBuffer.getInt(4),
+                headerBuffer.getInt(8),
+                rest.toByteArray()
+        )
+
+        return this.consumeBlock(blockData)
+    }
+
+    fun decodeDump(): ByteArray {
+        val rawData = this.streamDump()
+
+        return if (this.compressed) {
+            val decompresser = Inflater()
+            decompresser.setInput(rawData)
+
+            val outBuffer = ByteArray(decompresser.totalOut)
+            decompresser.inflate(outBuffer)
+
+            outBuffer
+        } else {
+            rawData
+        }
+    }
+
+    private fun streamDump(): ByteArray {
+        val out = ByteArray(this.filesize).toMutableList()
+
+        if (this.blockGraph!!.eliminated.size != this.k) {
+            throw NotDecodedException("The decoded has not completed decoding the blocks!")
+        }
+
+        val eliminatedBlocks = this.blockGraph!!.eliminated
+                .entries.stream().map { e -> Pair(e.key, e.value) }
+                .collect(Collectors.toList())
+                .sortedBy { a -> a.first }
+
+        eliminatedBlocks.forEachIndexed { index, pair ->
+            if ((index < this.k).or(this.filesize % this.blocksize == 0)) {
+                out.addAll(pair.second.toList())
+            } else {
+                out.addAll(pair.second.slice(IntRange(0, this.filesize % this.blocksize)))
+            }
+        }
+
+        return out.toByteArray()
     }
 }
