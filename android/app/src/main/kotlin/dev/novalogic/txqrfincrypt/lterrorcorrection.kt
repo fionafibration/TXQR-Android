@@ -255,6 +255,8 @@ class LTDecoder {
 
         val blockResult = this.handleBlock(sourceBlocks.second, block)
 
+        this.done = blockResult.second
+
         return blockResult.first
     }
 
