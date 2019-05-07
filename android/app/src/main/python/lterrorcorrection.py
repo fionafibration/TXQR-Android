@@ -140,7 +140,7 @@ class PRNG(object):
 
     def get_src_blocks(self, seed=None):
         """Returns the indices of a set of `d` source blocks
-        sampled from indices i = 1, ..., K-1 uniformly, where
+        sampled from indices i = 1, ..., k-1 uniformly, where
         `d` is sampled from the RSD described above.
         """
 
