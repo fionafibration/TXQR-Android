@@ -48,7 +48,7 @@ class MainActivity : FlutterActivity() {
             pProgress
         }
 
-        if (!mLtDecoder.is_done) {//TODO this needs implementation
+        if (!mLtDecoder.done) {//TODO this needs implementation
             messageToBeam = "DECODE.NOT_DONE"
         } else {
             var beamedMessage: ByteArray? = null
