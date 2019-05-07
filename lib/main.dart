@@ -113,7 +113,7 @@ class HomePageState extends State<HomePage> {
                 onPressed: () {
                   _getMessage("oza");
                 },
-              )
+              ),
             ],
           ),
         ),
@@ -141,7 +141,7 @@ class HomePageState extends State<HomePage> {
                 SizedBox(
                   height: 20,
                 ),
-                Text(_message)
+                Text(_message),
               ],
             ),
           )

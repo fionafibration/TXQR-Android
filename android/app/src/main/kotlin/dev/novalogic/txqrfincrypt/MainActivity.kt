@@ -34,12 +34,32 @@ class MainActivity : FlutterActivity() {
 
     private fun decodeMessage(rawResult: String): String {
 
-        if (!Python.isStarted()) {
-            Python.start(AndroidPlatform(this))
-        }
+//        if (!Python.isStarted()) {
+//            Python.start(AndroidPlatform(this))
+//        }
 
         val pProgress = 0.0f
-        val messageToBeam: String = "nope"
+        var messageToBeam: String = "nope"
+        val mLtDecoder = LTDecoder()
+
+        val progress = try {
+            mLtDecoder.decodeBytes(rawResult.toByteArray()) * 100
+        } catch (e: Throwable) {
+            pProgress
+        }
+
+        if (!mLtDecoder.is_done) {//TODO this needs implementation
+            messageToBeam = "DECODE.NOT_DONE"
+        } else {
+            var beamedMessage: ByteArray? = null
+            try {
+                val b64beamMessage = mLtDecoder.decodeDump()
+                beamedMessage = Base64.getDecoder().decode(b64beamMessage)
+            } catch (e: Throwable) {
+                //NOPE
+            }
+            messageToBeam = String(beamedMessage!!)
+        }
 
 //        if (Python.isStarted()) {
 //            val mLtDecoder = try {

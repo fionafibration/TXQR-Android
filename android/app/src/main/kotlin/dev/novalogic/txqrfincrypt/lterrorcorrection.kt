@@ -262,7 +262,7 @@ class LTDecoder {
         return this.blockGraph!!.addBlock(src_blocks, block)
     }
 
-    fun decoodeBytes(block_bytes: ByteArray): Double {
+    fun decodeBytes(block_bytes: ByteArray): Double {
         val magicByte = block_bytes[0]
         val header = block_bytes.slice(IntRange(1, 13))
         val rest = block_bytes.slice(IntRange(0, block_bytes.lastIndex))
