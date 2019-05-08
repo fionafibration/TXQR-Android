@@ -28,10 +28,30 @@ class HomePageState extends State<HomePage> {
   String _message = 'No Message';
 
   Future<void> _scan() async {
-    String rslt = await platform.invokeMethod('scan');
-    setState(() {
-      result = rslt; 
-    });
+    try {
+      String rslt = await platform.invokeMethod('scan');
+      setState(() {
+        result = rslt;
+      });
+    } on PlatformException catch (ex) {
+      if (ex.code == "PERMISSION_NOT_GRANTED") {
+        setState(() {
+          result = "Camera permission was denied";
+        });
+      } else {
+        setState(() {
+          result = "Unknown Error $ex";
+        });
+      }
+    } on FormatException {
+      setState(() {
+        result = "You pressed the back button before scanning anything";
+      });
+    } catch (ex) {
+      setState(() {
+        result = "Unknown Error $ex";
+      });
+    }
   }
 
   // Future<List<dynamic>> _getMessage(String msg) async {
@@ -109,7 +129,9 @@ class HomePageState extends State<HomePage> {
                 width: 10.0,
               ),
               Text("TxQr Fincrypt"),
-              SizedBox(width: 20,),
+              SizedBox(
+                width: 20,
+              ),
               IconButton(
                 icon: Icon(Icons.share),
                 color: Colors.blueGrey[600],
@@ -184,17 +206,15 @@ class HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: txSliverList(),
-      floatingActionButton: Builder(
-          builder: (BuildContext myContext) {
-            return FloatingActionButton.extended(
-              icon: Icon(Icons.camera_alt),
-              label: Text("Scan"),
-              onPressed: () async {
-                //_scanQR(myContext);
-                _scan();
-              }
-            );
-          }),
+      floatingActionButton: Builder(builder: (BuildContext myContext) {
+        return FloatingActionButton.extended(
+            icon: Icon(Icons.camera_alt),
+            label: Text("Scan"),
+            onPressed: () async {
+              //_scanQR(myContext);
+              _scan();
+            });
+      }),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
