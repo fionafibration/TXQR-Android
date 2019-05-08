@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:barcode_scan/barcode_scan.dart';
+//import 'package:barcode_scan/barcode_scan.dart';
 import 'package:flutter/services.dart';
 import 'package:share/share.dart';
 
@@ -20,56 +20,68 @@ class HomePage extends StatefulWidget {
 
 class HomePageState extends State<HomePage> {
   String result = "Hey there !";
+
   static const platform = const MethodChannel('tx.novalogic.dev/fincrypt');
-  static final _notDone = 'DECODE.NOT_DONE';
+
+  //static final _notDone = 'DECODE.NOT_DONE';
   // Get the message
   String _message = 'No Message';
 
-  Future<void> _getMessage(String msg) async {
-    String message;
-    try {
-      final String result = await platform.invokeMethod('decodeMessage', msg);
-      message = result;
-    } on PlatformException catch (e) {
-      message = 'Failed to retrieve message ${e.message}';
-    }
-
+  Future<void> _scan() async {
+    String rslt = await platform.invokeMethod('scan');
     setState(() {
-      _message = message; 
+      result = rslt; 
     });
   }
 
-  Future _scanQR() async {
-    try {
-      String qrResult = await BarcodeScanner.scan();
-      setState(() async {
-        await _getMessage(qrResult);
-        if (_message == _notDone) {
-          _scanQR();
-        } else {
-          result = _message;
-        }
-      });
-    } on PlatformException catch (ex) {
-      if (ex.code == BarcodeScanner.CameraAccessDenied) {
-        setState(() {
-          result = "Camera permission was denied";
-        });
-      } else {
-        setState(() {
-          result = "Unknown Error $ex";
-        });
-      }
-    } on FormatException {
-      setState(() {
-        result = "You pressed the back button before scanning anything";
-      });
-    } catch (ex) {
-      setState(() {
-        result = "Unknown Error $ex";
-      });
-    }
-  }
+  // Future<List<dynamic>> _getMessage(String msg) async {
+  //   List<dynamic> message;
+  //   try {
+  //     final List<dynamic> result = await platform.invokeMethod('decodeMessage', msg);
+  //     message = result;
+  //   } on PlatformException catch (e) {
+  //     message = ['Failed to retrieve message ${e.message}', -1.0];
+  //   }
+
+  //   setState(() {
+  //     _message = message;
+  //   });
+
+  //   return _message;
+  // }
+
+  // Future<void> _scanQR(BuildContext myContext) async {
+  //   try {
+  //     while ((await _getMessage(await BarcodeScanner.scan()))[0] == _notDone) {
+  //       //show snackbar
+  //       Scaffold.of(myContext).showSnackBar(
+  //         SnackBar(content: Text("?")),
+  //       );
+  //     }
+
+  //     setState(() async {
+  //       result = _message[0] as String;
+  //     });
+  //   } on PlatformException catch (ex) {
+  //     if (ex.code == BarcodeScanner.CameraAccessDenied) {
+  //       setState(() {
+  //         result = "Camera permission was denied";
+  //       });
+  //     } else {
+  //       setState(() {
+  //         result = "Unknown Error $ex";
+  //       });
+  //     }
+  //   } on FormatException {
+  //     setState(() {
+  //       result = "You pressed the back button before scanning anything";
+  //     });
+  //   } catch (ex) {
+  //     setState(() {
+  //       result = "Unknown Error $ex";
+  //     });
+  //   }
+  // }
 
   Widget txAppBar() => SliverAppBar(
         backgroundColor: Colors.black,
@@ -111,7 +123,7 @@ class HomePageState extends State<HomePage> {
                 color: Colors.green[300],
                 tooltip: 'test',
                 onPressed: () {
-                  _getMessage("oza");
+                  //_getMessage("oza");
                 },
               ),
             ],
@@ -172,11 +184,17 @@ class HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: txSliverList(),
-      floatingActionButton: FloatingActionButton.extended(
-        icon: Icon(Icons.camera_alt),
-        label: Text("Scan"),
-        onPressed: _scanQR,
-      ),
+      floatingActionButton: Builder(
+          builder: (BuildContext myContext) {
+            return FloatingActionButton.extended(
+              icon: Icon(Icons.camera_alt),
+              label: Text("Scan"),
+              onPressed: () async {
+                //_scanQR(myContext);
+                _scan();
+              }
+            );
+          }),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }

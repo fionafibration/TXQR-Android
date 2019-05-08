@@ -1,46 +1,65 @@
 package dev.novalogic.txqrfincrypt
 
+import android.app.Activity
+import android.content.Intent
 import android.os.Bundle
 
 import io.flutter.app.FlutterActivity
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugins.GeneratedPluginRegistrant
 
-import com.chaquo.python.Python
-import com.chaquo.python.android.AndroidPlatform
 import java.util.*
+
+import io.flutter.plugin.common.MethodChannel.Result
 
 class MainActivity : FlutterActivity() {
     private val CHANNEL = "tx.novalogic.dev/fincrypt"
+    var result : Result? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         GeneratedPluginRegistrant.registerWith(this)
 
-        MethodChannel(flutterView, CHANNEL).setMethodCallHandler { call, result ->
+        MethodChannel(flutterView, CHANNEL).setMethodCallHandler { call, Result ->
             if (call.method == "decodeMessage") {
                 val message = decodeMessage(call.arguments as String)
 
-                if (message != "") {
-                    result.success(message)
+                if (message.isNotEmpty()) {
+                    Result.success(message)
                 } else {
-                    result.error("NOPE", "No message returned", null)
+                    Result.error("NOPE", "No message returned", null)
                 }
+            } else if (call.method == "scan") {
+                this.result = Result
+                val intent = Intent(this, BarcodeScannerActivity::class.java)
+                this.startActivityForResult(intent, 100)
             } else {
-                result.notImplemented()
+                Result.notImplemented()
             }
         }
     }
 
-    private fun decodeMessage(rawResult: String): String {
+    override fun onActivityResult(code: Int, resultCode: Int, data: Intent?) {
+        if (code == 100) {
+            if (resultCode == Activity.RESULT_OK) {
+                val barcode = data?.getStringExtra("SCAN_RESULT")
+                barcode?.let { this.result?.success(barcode) }
+            } else {
+                val errorCode = data?.getStringExtra("ERROR_CODE")
+                this.result?.error(errorCode, null, null)
+            }
+        }
+    }
+
+    private val mLtDecoder = LTDecoder()
+    private fun decodeMessage(rawResult: String): List<Any> {
 
 //        if (!Python.isStarted()) {
 //            Python.start(AndroidPlatform(this))
 //        }
 
         val pProgress = 0.0f
-        var messageToBeam: String = "nope"
-        val mLtDecoder = LTDecoder()
+        var messageToBeam: List<Any>
 
         val progress = try {
             mLtDecoder.decodeBytes(rawResult.toByteArray()) * 100
@@ -48,8 +67,8 @@ class MainActivity : FlutterActivity() {
             pProgress
         }
 
-        if (!mLtDecoder.done) {//TODO this needs implementation
-            messageToBeam = "DECODE.NOT_DONE"
+        if (!mLtDecoder.done) {
+            messageToBeam = listOf("DECODE.NOT_DONE", progress)
         } else {
             var beamedMessage: ByteArray? = null
             try {
@@ -58,7 +77,7 @@ class MainActivity : FlutterActivity() {
             } catch (e: Throwable) {
                 //NOPE
             }
-            messageToBeam = String(beamedMessage!!)
+            messageToBeam = listOf(String(beamedMessage!!), progress)
         }
 
 //        if (Python.isStarted()) {
@@ -94,8 +113,8 @@ class MainActivity : FlutterActivity() {
     }
 }
 
-class logThePython {
-    fun logit(message: String) {
-        //lol it does nothing
-    }
-}
+//class logThePython {
+//    fun logit(message: String) {
+//        //lol it does nothing
+//    }
+//}
