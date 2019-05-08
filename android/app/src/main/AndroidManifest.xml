@@ -37,6 +37,7 @@
             </intent-filter>
         </activity>
         <activity android:name="com.apptreesoftware.barcodescan.BarcodeScannerActivity"/>
+        <activity android:name="dev.novalogic.txqrfincrypt.BarcodeScannerActivity" />
 
     </application>
 </manifest>
