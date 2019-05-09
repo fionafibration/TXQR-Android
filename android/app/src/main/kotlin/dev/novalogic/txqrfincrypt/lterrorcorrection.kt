@@ -85,10 +85,10 @@ class RobustSolitonDistributionPRNG(private val k: Int) {
     }
 
     private fun sampleD(): Int {
-        val p = this.getNext() / PRNG_MAX_RAND
+        val p = this.getNext().toDouble() / PRNG_MAX_RAND.toDouble()
         for (i in 0 until this.cdf.size) {
             val v = this.cdf[i]
-            if (v.toBigDecimal() > p.toBigDecimal()) {
+            if (v > p) {
                 return i + 1
             }
         }
@@ -96,11 +96,12 @@ class RobustSolitonDistributionPRNG(private val k: Int) {
     }
 
     fun getSourceBlocks(seed: Long?): Pair<Long, MutableSet<Int>> {
-        val blockseed = this.state
-
         if (seed != null) {
             this.state = seed
         }
+
+
+        val blockseed = this.state
 
         val d = this.sampleD()
 
@@ -116,6 +117,7 @@ class RobustSolitonDistributionPRNG(private val k: Int) {
                 have += 1
             }
         }
+
         return Pair(blockseed, nums)
     }
 }
@@ -268,11 +270,11 @@ class LTDecoder {
     fun decodeBytes(block_bytes: ByteArray): Double {
         val magicByte = block_bytes[0]
         val header = block_bytes.slice(IntRange(1, 12))
-        val rest = block_bytes.slice(IntRange(0, block_bytes.lastIndex))
+        val rest = block_bytes.slice(IntRange(13, block_bytes.lastIndex))
 
         Log.v("QR_MAGIC", "%02x".format(magicByte))
 
-        Log.v("QR_HEADER", header.joinToString("") { java.lang.String.format("%02x", it)})
+        Log.v("QR_HEADER", header.joinToString("") { java.lang.String.format("%02x", it)} + ", Length: ${header.size}")
 
         val headerBuffer = ByteBuffer.allocate(12).put(header.toByteArray())
 
@@ -316,12 +318,8 @@ class LTDecoder {
                 .collect(Collectors.toList())
                 .sortedBy { a -> a.first }
 
-        for (value in eliminatedBlocks) {
-            Log.v("QR_BLOCK", "Index: ${value.first}, Data: ${value.second}")
-        }
-
         eliminatedBlocks.forEachIndexed { index, pair ->
-            if ((index < this.k - 1).or(this.filesize % this.blocksize == 0)) {
+            if ((pair.first < this.k - 1).or(this.filesize % this.blocksize == 0)) {
                 out.addAll(pair.second.toList())
             } else {
                 out.addAll(pair.second.slice(IntRange(0, this.filesize % this.blocksize)))

@@ -20,6 +20,7 @@ class BarcodeScannerActivity : Activity(), ZXingScannerView.ResultHandler {
 
     lateinit var scannerView: ZXingScannerView
     lateinit var mLtDecoder: LTDecoder
+    var progress : Double = 0.0
 
     companion object {
         const val REQUEST_TAKE_PHOTO_CAMERA_PERMISSION = 100
@@ -76,13 +77,13 @@ class BarcodeScannerActivity : Activity(), ZXingScannerView.ResultHandler {
 
     override fun handleResult(result: Result?) { //Handles the results of the scan and recursively calls the scanner to complete decoding
         val intent = Intent()
-        var progress: Double = 0.0
         val messageToBeam: String
 
         progress = try {
             Log.v("QR_SEEN", "QR Data: ${result!!.text}")
             mLtDecoder.decodeBytes(Base64.getDecoder().decode(result.text.toByteArray(Charsets.UTF_8))) * 100
         } catch (e: Throwable) {
+            Log.e("QR_ERROR", "Exception decoding QR code!", e)
             progress
         }
 
