@@ -96,7 +96,7 @@ class BarcodeScannerActivity : Activity(), ZXingScannerView.ResultHandler {
             try {
                 beamedMessage = mLtDecoder.decodeDump()
             } catch (e: Throwable) {
-                throw e
+                Log.e("QR_ERROR", "Exception decoding file!", e)
             }
             messageToBeam = String(beamedMessage!!)
 

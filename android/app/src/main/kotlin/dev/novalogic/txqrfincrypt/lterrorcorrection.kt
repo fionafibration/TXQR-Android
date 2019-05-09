@@ -136,7 +136,13 @@ class BlockGraph(private var k: Int) {
     private val checks: MutableMap<Int, MutableList<BlockNode>> = mutableMapOf()
     val eliminated: MutableMap<Int, ByteArray> = mutableMapOf()
 
-    fun addBlock(nodes: MutableSet<Int>, in_data: ByteArray): Pair<Double, Boolean> {
+    fun addBlock(in_nodes: MutableSet<Int>, in_data: ByteArray): Pair<Double, Boolean> {
+        val nodes = mutableSetOf<Int>()
+
+        for (item in in_nodes) {
+            nodes.add(item)
+        }
+
         var data = in_data
         if (nodes.size == 1) {
             val toEliminate = this.eliminate(nodes.sorted()[0], data)
@@ -148,9 +154,10 @@ class BlockGraph(private var k: Int) {
                 toEliminate.addAll(this.eliminate(other, check))
             }
         } else {
-            nodes.toList().forEach {
+            val iter = nodes.iterator()
+            iter.forEach {
                 if (this.eliminated.keys.contains(it)) {
-                    nodes.remove(it)
+                    iter.remove()
                     data = xorByteArray(data,
                             this.eliminated.getOrDefault(it, ByteArray(0))
                     )!!
@@ -162,7 +169,13 @@ class BlockGraph(private var k: Int) {
             } else {
                 val check = BlockNode(nodes, data)
                 nodes.forEach {
-                    this.checks[it]?.add(check)
+                    if (this.checks.containsKey(it)) {
+                        this.checks[it]!!.add(check)
+                    }
+                    else {
+                        this.checks[it] = mutableListOf()
+                        this.checks[it]!!.add(check)
+                    }
                 }
             }
         }
@@ -293,9 +306,8 @@ class LTDecoder {
         val rawData = this.streamDump()
 
         return if (this.compressed) {
-            val decompresser = Inflater(true)
-            Log.v("QR_DATA", rawData.joinToString("") { java.lang.String.format("%02x", it)})
-            decompresser.setInput(rawData + ByteArray(1) { a -> a.toByte()})
+            val decompresser = Inflater()
+            decompresser.setInput(rawData)
 
             val outBuffer = ByteArray(decompresser.totalOut)
             decompresser.inflate(outBuffer)
@@ -307,7 +319,7 @@ class LTDecoder {
     }
 
     private fun streamDump(): ByteArray {
-        val out = ByteArray(this.filesize).toMutableList()
+        val out = ByteArray(0).toMutableList()
 
         if (this.blockGraph!!.eliminated.size != this.k) {
             throw NotDecodedException("The decoded has not completed decoding the blocks!")
