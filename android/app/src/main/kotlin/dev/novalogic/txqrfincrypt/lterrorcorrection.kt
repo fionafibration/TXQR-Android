@@ -4,6 +4,7 @@ import java.lang.Exception
 import java.nio.ByteBuffer
 import java.util.stream.Collectors
 import java.util.zip.Inflater
+import android.util.Log
 import kotlin.math.*
 import kotlin.experimental.xor
 import kotlin.experimental.and
@@ -59,7 +60,7 @@ fun genRsdCdf(k: Int, delta: Double, c: Double): MutableList<Double> {
     val distribution = mutableListOf<Double>()
 
     for (d in 0 until k) {
-        distribution.add(mu.slice(IntRange(0, d + 1)).sum())
+        distribution.add(mu.slice(IntRange(0, d)).sum())
     }
 
     return distribution
@@ -84,10 +85,10 @@ class RobustSolitonDistributionPRNG(private val k: Int) {
     }
 
     private fun sampleD(): Int {
-        val p = this.getNext() / PRNG_MAX_RAND
+        val p = this.getNext().toDouble() / PRNG_MAX_RAND.toDouble()
         for (i in 0 until this.cdf.size) {
             val v = this.cdf[i]
-            if (v.toBigDecimal() > p.toBigDecimal()) {
+            if (v > p) {
                 return i + 1
             }
         }
@@ -95,11 +96,12 @@ class RobustSolitonDistributionPRNG(private val k: Int) {
     }
 
     fun getSourceBlocks(seed: Long?): Pair<Long, MutableSet<Int>> {
-        val blockseed = this.state
-
         if (seed != null) {
             this.state = seed
         }
+
+
+        val blockseed = this.state
 
         val d = this.sampleD()
 
@@ -115,15 +117,14 @@ class RobustSolitonDistributionPRNG(private val k: Int) {
                 have += 1
             }
         }
+
         return Pair(blockseed, nums)
     }
 }
 
 fun xorByteArray(a: ByteArray, b: ByteArray): ByteArray? {
     if (a.size == b.size) {
-        a.mapIndexed { index, byte ->
-            return ByteArray(byte.xor(b[index]).toInt())
-        }
+        return ByteArray(a.size) { index -> a[index].xor(b[index])}
     }
     return null
 }
@@ -135,7 +136,13 @@ class BlockGraph(private var k: Int) {
     private val checks: MutableMap<Int, MutableList<BlockNode>> = mutableMapOf()
     val eliminated: MutableMap<Int, ByteArray> = mutableMapOf()
 
-    fun addBlock(nodes: MutableSet<Int>, in_data: ByteArray): Pair<Double, Boolean> {
+    fun addBlock(in_nodes: MutableSet<Int>, in_data: ByteArray): Pair<Double, Boolean> {
+        val nodes = mutableSetOf<Int>()
+
+        for (item in in_nodes) {
+            nodes.add(item)
+        }
+
         var data = in_data
         if (nodes.size == 1) {
             val toEliminate = this.eliminate(nodes.sorted()[0], data)
@@ -147,9 +154,10 @@ class BlockGraph(private var k: Int) {
                 toEliminate.addAll(this.eliminate(other, check))
             }
         } else {
-            nodes.toList().forEach {
+            val iter = nodes.iterator()
+            iter.forEach {
                 if (this.eliminated.keys.contains(it)) {
-                    nodes.remove(it)
+                    iter.remove()
                     data = xorByteArray(data,
                             this.eliminated.getOrDefault(it, ByteArray(0))
                     )!!
@@ -161,7 +169,13 @@ class BlockGraph(private var k: Int) {
             } else {
                 val check = BlockNode(nodes, data)
                 nodes.forEach {
-                    this.checks[it]?.add(check)
+                    if (this.checks.containsKey(it)) {
+                        this.checks[it]!!.add(check)
+                    }
+                    else {
+                        this.checks[it] = mutableListOf()
+                        this.checks[it]!!.add(check)
+                    }
                 }
             }
         }
@@ -237,6 +251,8 @@ class LTDecoder {
         val blockseed = lt_block.blockseed
         val block = lt_block.block
 
+        Log.v("QR_METADATA", "Filesize: ${filesize}, Blocksize: ${blocksize}")
+
         if (magicByte and 0x01.toByte() != 0.toByte()) {
             this.compressed = true
         }
@@ -266,8 +282,12 @@ class LTDecoder {
 
     fun decodeBytes(block_bytes: ByteArray): Double {
         val magicByte = block_bytes[0]
-        val header = block_bytes.slice(IntRange(1, 13))
-        val rest = block_bytes.slice(IntRange(0, block_bytes.lastIndex))
+        val header = block_bytes.slice(IntRange(1, 12))
+        val rest = block_bytes.slice(IntRange(13, block_bytes.lastIndex))
+
+        Log.v("QR_MAGIC", "%02x".format(magicByte))
+
+        Log.v("QR_HEADER", header.joinToString("") { java.lang.String.format("%02x", it)} + ", Length: ${header.size}")
 
         val headerBuffer = ByteBuffer.allocate(12).put(header.toByteArray())
 
@@ -299,7 +319,7 @@ class LTDecoder {
     }
 
     private fun streamDump(): ByteArray {
-        val out = ByteArray(this.filesize).toMutableList()
+        val out = ByteArray(0).toMutableList()
 
         if (this.blockGraph!!.eliminated.size != this.k) {
             throw NotDecodedException("The decoded has not completed decoding the blocks!")
@@ -311,7 +331,7 @@ class LTDecoder {
                 .sortedBy { a -> a.first }
 
         eliminatedBlocks.forEachIndexed { index, pair ->
-            if ((index < this.k).or(this.filesize % this.blocksize == 0)) {
+            if ((pair.first < this.k - 1).or(this.filesize % this.blocksize == 0)) {
                 out.addAll(pair.second.toList())
             } else {
                 out.addAll(pair.second.slice(IntRange(0, this.filesize % this.blocksize)))
