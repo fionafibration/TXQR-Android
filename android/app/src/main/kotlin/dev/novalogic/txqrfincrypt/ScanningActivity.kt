@@ -5,6 +5,7 @@ import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import android.view.Menu
@@ -75,26 +76,26 @@ class BarcodeScannerActivity : Activity(), ZXingScannerView.ResultHandler {
 
     override fun handleResult(result: Result?) { //Handles the results of the scan and recursively calls the scanner to complete decoding
         val intent = Intent()
-        val pProgress = 0.0f
+        var progress: Double = 0.0
         val messageToBeam: String
 
-        val progress = try {
-            mLtDecoder.decodeBytes(result!!.rawBytes) * 100
+        progress = try {
+            Log.v("QR_SEEN", "QR Data: ${result!!.text}")
+            mLtDecoder.decodeBytes(Base64.getDecoder().decode(result.text.toByteArray(Charsets.UTF_8))) * 100
         } catch (e: Throwable) {
-            pProgress
+            progress
         }
 
         if (!mLtDecoder.done) {
             Toast.makeText(this, "%.1f%% Done".format(progress), Toast.LENGTH_LONG).show()
-
+            Log.v("QR_PROGRESS", "QR is %.1f%% done decoding".format(progress))
             scannerView.resumeCameraPreview(this)
         } else {
             var beamedMessage: ByteArray? = null
             try {
-                val b64beamMessage = mLtDecoder.decodeDump()
-                beamedMessage = Base64.getDecoder().decode(b64beamMessage)
+                beamedMessage = mLtDecoder.decodeDump()
             } catch (e: Throwable) {
-                //NOPE
+                throw e
             }
             messageToBeam = String(beamedMessage!!)
 
@@ -123,7 +124,7 @@ class BarcodeScannerActivity : Activity(), ZXingScannerView.ResultHandler {
         return false
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>,grantResults: IntArray) {
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         when (requestCode) {
             REQUEST_TAKE_PHOTO_CAMERA_PERMISSION -> {
                 if (PermissionUtil.verifyPermissions(grantResults)) {

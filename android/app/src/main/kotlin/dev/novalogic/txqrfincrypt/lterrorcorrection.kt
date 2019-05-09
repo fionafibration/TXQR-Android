@@ -4,6 +4,7 @@ import java.lang.Exception
 import java.nio.ByteBuffer
 import java.util.stream.Collectors
 import java.util.zip.Inflater
+import android.util.Log
 import kotlin.math.*
 import kotlin.experimental.xor
 import kotlin.experimental.and
@@ -59,7 +60,7 @@ fun genRsdCdf(k: Int, delta: Double, c: Double): MutableList<Double> {
     val distribution = mutableListOf<Double>()
 
     for (d in 0 until k) {
-        distribution.add(mu.slice(IntRange(0, d + 1)).sum())
+        distribution.add(mu.slice(IntRange(0, d)).sum())
     }
 
     return distribution
@@ -121,9 +122,7 @@ class RobustSolitonDistributionPRNG(private val k: Int) {
 
 fun xorByteArray(a: ByteArray, b: ByteArray): ByteArray? {
     if (a.size == b.size) {
-        a.mapIndexed { index, byte ->
-            return ByteArray(byte.xor(b[index]).toInt())
-        }
+        return ByteArray(a.size) { index -> a[index].xor(b[index])}
     }
     return null
 }
@@ -237,6 +236,8 @@ class LTDecoder {
         val blockseed = lt_block.blockseed
         val block = lt_block.block
 
+        Log.v("QR_METADATA", "Filesize: ${filesize}, Blocksize: ${blocksize}")
+
         if (magicByte and 0x01.toByte() != 0.toByte()) {
             this.compressed = true
         }
@@ -266,8 +267,12 @@ class LTDecoder {
 
     fun decodeBytes(block_bytes: ByteArray): Double {
         val magicByte = block_bytes[0]
-        val header = block_bytes.slice(IntRange(1, 13))
+        val header = block_bytes.slice(IntRange(1, 12))
         val rest = block_bytes.slice(IntRange(0, block_bytes.lastIndex))
+
+        Log.v("QR_MAGIC", "%02x".format(magicByte))
+
+        Log.v("QR_HEADER", header.joinToString("") { java.lang.String.format("%02x", it)})
 
         val headerBuffer = ByteBuffer.allocate(12).put(header.toByteArray())
 
@@ -286,8 +291,9 @@ class LTDecoder {
         val rawData = this.streamDump()
 
         return if (this.compressed) {
-            val decompresser = Inflater()
-            decompresser.setInput(rawData)
+            val decompresser = Inflater(true)
+            Log.v("QR_DATA", rawData.joinToString("") { java.lang.String.format("%02x", it)})
+            decompresser.setInput(rawData + ByteArray(1) { a -> a.toByte()})
 
             val outBuffer = ByteArray(decompresser.totalOut)
             decompresser.inflate(outBuffer)
@@ -310,8 +316,12 @@ class LTDecoder {
                 .collect(Collectors.toList())
                 .sortedBy { a -> a.first }
 
+        for (value in eliminatedBlocks) {
+            Log.v("QR_BLOCK", "Index: ${value.first}, Data: ${value.second}")
+        }
+
         eliminatedBlocks.forEachIndexed { index, pair ->
-            if ((index < this.k).or(this.filesize % this.blocksize == 0)) {
+            if ((index < this.k - 1).or(this.filesize % this.blocksize == 0)) {
                 out.addAll(pair.second.toList())
             } else {
                 out.addAll(pair.second.slice(IntRange(0, this.filesize % this.blocksize)))
