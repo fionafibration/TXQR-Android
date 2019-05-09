@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+
 //import 'package:barcode_scan/barcode_scan.dart';
 import 'package:flutter/services.dart';
 import 'package:share/share.dart';
@@ -103,6 +104,89 @@ class HomePageState extends State<HomePage> {
   //   }
   // }
 
+  void _showModalBottomSheet(BuildContext context) {
+    List<String> items = ["Share", "Scan"];
+    showModalBottomSheet(
+        context: context,
+        builder: (context) => Material(
+            clipBehavior: Clip.antiAlias,
+            color: Colors.white,
+            child: Container(
+              height: MediaQuery.of(context).size.height * .25,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                mainAxisSize: MainAxisSize.max,
+                children: <Widget>[
+                  bottomMenuHeader(),
+                  Expanded(
+                    child: ListView.builder(
+                      shrinkWrap: false,
+                      itemCount: items.length,
+                      itemBuilder: (context, i) => Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                            child: ListTile(
+                                title: Text(
+                                  items[i],
+                                ),
+                                leading: whichIcon(items[i]),
+                                onTap: () {}),
+                          ),
+                    ),
+                  ),
+                  //about tile?
+                ],
+              ),
+            )));
+  }
+
+  Widget bottomMenuHeader() => Ink(
+        decoration: BoxDecoration(
+            gradient:
+                LinearGradient(colors: [Colors.black, Colors.blueAccent])),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: <Widget>[
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  // crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    Text(
+                      "TxQr Fincrypt",
+                      style: TextStyle(
+                          fontSize: 20.0,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.green),
+                    ),
+                    SizedBox(
+                      height: 5.0,
+                    ),
+                    Text(
+                      "Things To Do",
+                      style: TextStyle(
+                          fontSize: 15.0,
+                          fontWeight: FontWeight.normal,
+                          color: Colors.blueAccent),
+                    ),
+                  ],
+                ),
+              )
+            ],
+          ),
+        ),
+      );
+
+  Widget whichIcon(String item) {
+    if (item == "Share") {
+      return Icon(Icons.share);
+    } else {
+      return Icon(Icons.camera_alt);
+    }
+  }
+
   Widget txAppBar() => SliverAppBar(
         backgroundColor: Colors.black,
         pinned: true,
@@ -145,6 +229,7 @@ class HomePageState extends State<HomePage> {
                 color: Colors.green[300],
                 tooltip: 'test',
                 onPressed: () {
+                  _showModalBottomSheet(context);
                   //_getMessage("oza");
                 },
               ),
