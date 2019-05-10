@@ -333,6 +333,13 @@ class HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: txSliverList(),
+      bottomNavigationBar: BottomAppBar(
+        shape: CircularNotchedRectangle(),
+        notchMargin: 4,
+        child: Container(
+          height: 50.0,
+        ),
+      ),
       floatingActionButton: Builder(builder: (BuildContext myContext) {
         return FloatingActionButton.extended(
             icon: Icon(Icons.adb),
@@ -343,7 +350,7 @@ class HomePageState extends State<HomePage> {
               _showModalBottomSheet(context);
             });
       }),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     );
   }
 }
