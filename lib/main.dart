@@ -343,6 +343,7 @@ class HomePageState extends State<HomePage> {
       floatingActionButton: Builder(builder: (BuildContext myContext) {
         return FloatingActionButton.extended(
             icon: Icon(Icons.adb),
+            backgroundColor: Colors.black,
             label: Text("Go"),
             onPressed: () async {
               //_scanQR(myContext);
