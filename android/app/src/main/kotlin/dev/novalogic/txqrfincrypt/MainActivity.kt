@@ -3,6 +3,7 @@ package dev.novalogic.txqrfincrypt
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 
 import io.flutter.app.FlutterActivity
 import io.flutter.plugin.common.MethodChannel
@@ -43,6 +44,7 @@ class MainActivity : FlutterActivity() {
         if (code == 100) {
             if (resultCode == Activity.RESULT_OK) {
                 val barcode = data?.getStringExtra("SCAN_RESULT")
+                Log.v("Scan_Result", barcode)
                 barcode?.let { this.result?.success(barcode) }
             } else {
                 val errorCode = data?.getStringExtra("ERROR_CODE")

@@ -139,6 +139,14 @@ class HomePageState extends State<HomePage> {
             )));
   }
 
+  Widget whichIcon(String item) {
+    if (item == "Share") {
+      return Icon(Icons.share);
+    } else {
+      return Icon(Icons.camera_alt);
+    }
+  }
+
   Widget bottomMenuHeader() => Ink(
         decoration: BoxDecoration(
             gradient:
@@ -178,14 +186,6 @@ class HomePageState extends State<HomePage> {
           ),
         ),
       );
-
-  Widget whichIcon(String item) {
-    if (item == "Share") {
-      return Icon(Icons.share);
-    } else {
-      return Icon(Icons.camera_alt);
-    }
-  }
 
   Widget txAppBar() => SliverAppBar(
         backgroundColor: Colors.black,
