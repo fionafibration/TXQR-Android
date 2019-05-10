@@ -304,6 +304,8 @@ class LTDecoder {
     fun decodeDump(): ByteArray {
         val rawData = this.streamDump()
 
+        Log.v("QR_RAW", "Raw: ${rawData.toList().joinToString(" ") {"%02x".format(it)} }")
+
         val decoded = if (this.compressed) {
             val decompresser = Inflater()
             decompresser.setInput(rawData)
@@ -340,7 +342,7 @@ class LTDecoder {
             if ((pair.first < this.k - 1).or(this.filesize % this.blocksize == 0)) {
                 out.addAll(pair.second.toList())
             } else {
-                out.addAll(pair.second.slice(IntRange(0, this.filesize % this.blocksize)))
+                out.addAll(pair.second.slice(IntRange(0, (this.filesize % this.blocksize) - 1)))
             }
         }
 
