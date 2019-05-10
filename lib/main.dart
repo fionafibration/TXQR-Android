@@ -113,7 +113,7 @@ class HomePageState extends State<HomePage> {
             clipBehavior: Clip.antiAlias,
             color: Colors.white,
             child: Container(
-              height: MediaQuery.of(context).size.height * .25,
+              height: MediaQuery.of(context).size.height * .50,
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 mainAxisSize: MainAxisSize.max,

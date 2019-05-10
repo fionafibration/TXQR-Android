@@ -1,13 +1,13 @@
 package dev.novalogic.txqrfincrypt
 
-import java.lang.Exception
+import android.util.Log
+import java.io.ByteArrayOutputStream
 import java.nio.ByteBuffer
 import java.util.stream.Collectors
 import java.util.zip.Inflater
-import android.util.Log
-import kotlin.math.*
-import kotlin.experimental.xor
 import kotlin.experimental.and
+import kotlin.experimental.xor
+import kotlin.math.*
 
 fun genTau(s: Double, k: Int, delta: Double): MutableList<Double> {
 
@@ -124,7 +124,7 @@ class RobustSolitonDistributionPRNG(private val k: Int) {
 
 fun xorByteArray(a: ByteArray, b: ByteArray): ByteArray? {
     if (a.size == b.size) {
-        return ByteArray(a.size) { index -> a[index].xor(b[index])}
+        return ByteArray(a.size) { index -> a[index] xor b[index] }
     }
     return null
 }
@@ -171,8 +171,7 @@ class BlockGraph(private var k: Int) {
                 nodes.forEach {
                     if (this.checks.containsKey(it)) {
                         this.checks[it]!!.add(check)
-                    }
-                    else {
+                    } else {
                         this.checks[it] = mutableListOf()
                         this.checks[it]!!.add(check)
                     }
@@ -217,7 +216,7 @@ class BlockGraph(private var k: Int) {
 class BlockData(val magic_byte: Byte, val filesize: Int, val blocksize: Int,
                 val blockseed: Int, val block: ByteArray)
 
-class NotDecodedException(message : String) : Exception(message)
+class NotDecodedException(message: String) : Exception(message)
 
 class LTDecoder {
     private var k: Int
@@ -287,7 +286,7 @@ class LTDecoder {
 
         Log.v("QR_MAGIC", "%02x".format(magicByte))
 
-        Log.v("QR_HEADER", header.joinToString("") { java.lang.String.format("%02x", it)} + ", Length: ${header.size}")
+        Log.v("QR_HEADER", header.joinToString("") { java.lang.String.format("%02x", it) } + ", Length: ${header.size}")
 
         val headerBuffer = ByteBuffer.allocate(12).put(header.toByteArray())
 
@@ -305,17 +304,24 @@ class LTDecoder {
     fun decodeDump(): ByteArray {
         val rawData = this.streamDump()
 
-        return if (this.compressed) {
+        val decoded = if (this.compressed) {
             val decompresser = Inflater()
             decompresser.setInput(rawData)
 
-            val outBuffer = ByteArray(decompresser.totalOut)
-            decompresser.inflate(outBuffer)
+            val result = ByteArrayOutputStream()
 
-            outBuffer
+            while (!decompresser.finished()) {
+                val buf = ByteArray(2048)
+                val count = decompresser.inflate(buf)
+                result.write(buf, 0, count)
+            }
+
+            result.toByteArray()
         } else {
             rawData
         }
+
+        return decoded
     }
 
     private fun streamDump(): ByteArray {
