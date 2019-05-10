@@ -290,7 +290,7 @@ class HomePageState extends State<HomePage> {
                         child: Text(
                           result,
                           style: new TextStyle(
-                              fontSize: 30.0, fontWeight: FontWeight.bold),
+                              fontSize: 11.0, fontWeight: FontWeight.w600),
                         ),
                       ),
                     ),
