@@ -106,58 +106,85 @@ class HomePageState extends State<HomePage> {
   // }
 
   void _showModalBottomSheet(BuildContext context) {
-    List<String> items = ["Share", "Scan"];
     showModalBottomSheet(
         context: context,
         builder: (context) => Material(
             clipBehavior: Clip.antiAlias,
             color: Colors.white,
             child: Container(
-              height: MediaQuery.of(context).size.height * .50,
+              height: 320,
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                mainAxisSize: MainAxisSize.max,
+                //mainAxisAlignment: MainAxisAlignment.spaceAround,
+                mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
                   bottomMenuHeader(),
                   Expanded(
-                    child: ListView.builder(
-                      shrinkWrap: false,
-                      itemCount: items.length,
-                      itemBuilder: (context, i) => Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                            child: ListTile(
-                                title: Text(
-                                  items[i],
-                                ),
-                                leading: whichIcon(items[i]),
-                                onTap: () {
-                                  if (items[i] == "Share") {
-                                    Share.share(result);
-                                  } else {
-                                    _scan();
-                                  }
-                                }),
+                    child: SizedBox(
+                      height: 40,
+                      child: GridView.count(
+                        crossAxisSpacing: 2,
+                        crossAxisCount: 2,
+                        children: <Widget>[
+                          IconButton(
+                            iconSize: 40,
+                            icon: Icon(Icons.share),
+                            color: Colors.blueGrey[600],
+                            tooltip: 'Share',
+                            onPressed: () {
+                              Share.share(result);
+                            },
                           ),
+                          IconButton(
+                            iconSize: 40,
+                            icon: Icon(Icons.camera_alt),
+                            color: Colors.blueGrey[600],
+                            tooltip: 'Scan a TxQR',
+                            onPressed: () {
+                              _scan();
+                            },
+                          ),
+                        ],
+                      ),
                     ),
                   ),
+                  // Expanded(
+                  //   child: ListView.builder(
+                  //     shrinkWrap: false,
+                  //     itemCount: items.length,
+                  //     itemBuilder: (context, i) => Padding(
+                  //           padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                  //           child: ListTile(
+                  //               title: Text(
+                  //                 items[i],
+                  //               ),
+                  //               leading: whichIcon(items[i]),
+                  //               onTap: () {
+                  //                 if (items[i] == "Share") {
+                  //                   Share.share(result);
+                  //                 } else {
+                  //                   _scan();
+                  //                 }
+                  //               }),
+                  //         ),
+                  //   ),
+                  // ),
                   //about tile?
                 ],
               ),
             )));
   }
 
-  Widget whichIcon(String item) {
-    if (item == "Share") {
-      return Icon(Icons.share);
-    } else {
-      return Icon(Icons.camera_alt);
-    }
-  }
+  // Widget whichIcon(String item) {
+  //   if (item == "Share") {
+  //     return Icon(Icons.share);
+  //   } else {
+  //     return Icon(Icons.camera_alt);
+  //   }
+  // }
 
   Widget bottomMenuHeader() => Ink(
         decoration: BoxDecoration(
-            gradient:
-                LinearGradient(colors: [Colors.black, Colors.blueGrey])),
+            gradient: LinearGradient(colors: [Colors.black, Colors.blueGrey])),
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Row(
@@ -272,7 +299,10 @@ class HomePageState extends State<HomePage> {
                 SizedBox(
                   height: 20,
                 ),
-                Text(_message),
+                SizedBox(
+                  height: 50,
+                  child: Text(_message),
+                ),
               ],
             ),
           )
