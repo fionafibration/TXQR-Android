@@ -60,27 +60,27 @@ class MainActivity : FlutterActivity() {
 //            Python.start(AndroidPlatform(this))
 //        }
 
-        val pProgress = 0.0f
-        var messageToBeam: List<Any>
-
-        val progress = try {
-            mLtDecoder.decodeBytes(rawResult.toByteArray()) * 100
-        } catch (e: Throwable) {
-            pProgress
-        }
-
-        if (!mLtDecoder.done) {
-            messageToBeam = listOf("DECODE.NOT_DONE", progress)
-        } else {
-            var beamedMessage: ByteArray? = null
-            try {
-                val b64beamMessage = mLtDecoder.decodeDump()
-                beamedMessage = Base64.getDecoder().decode(b64beamMessage)
-            } catch (e: Throwable) {
-                //NOPE
-            }
-            messageToBeam = listOf(String(beamedMessage!!), progress)
-        }
+//        val pProgress = 0.0f
+////        var messageToBeam: List<Any>
+////
+////        val progress = try {
+////            mLtDecoder.decodeBytes(rawResult.toByteArray()) * 100
+////        } catch (e: Throwable) {
+////            pProgress
+////        }
+////
+////        if (!mLtDecoder.done) {
+////            messageToBeam = listOf("DECODE.NOT_DONE", progress)
+////        } else {
+////            var beamedMessage: ByteArray? = null
+////            try {
+////                val b64beamMessage = mLtDecoder.decodeDump()
+////                beamedMessage = Base64.getDecoder().decode(b64beamMessage)
+////            } catch (e: Throwable) {
+////                //NOPE
+////            }
+////            messageToBeam = listOf(String(beamedMessage!!), progress)
+////        }
 
 //        if (Python.isStarted()) {
 //            val mLtDecoder = try {
@@ -111,7 +111,7 @@ class MainActivity : FlutterActivity() {
 //            messageToBeam = "We Could not Start Python the dev fucked up"
 //        }
 
-        return messageToBeam
+        return listOf()//messageToBeam
     }
 }
 

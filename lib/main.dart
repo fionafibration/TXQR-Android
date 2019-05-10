@@ -33,6 +33,7 @@ class HomePageState extends State<HomePage> {
       String rslt = await platform.invokeMethod('scan');
       setState(() {
         result = rslt;
+        _message = "A Message was decoded YAY";
       });
     } on PlatformException catch (ex) {
       if (ex.code == "PERMISSION_NOT_GRANTED") {
@@ -129,7 +130,13 @@ class HomePageState extends State<HomePage> {
                                   items[i],
                                 ),
                                 leading: whichIcon(items[i]),
-                                onTap: () {}),
+                                onTap: () {
+                                  if (items[i] == "Share") {
+                                    Share.share(result);
+                                  } else {
+                                    _scan();
+                                  }
+                                }),
                           ),
                     ),
                   ),
@@ -150,7 +157,7 @@ class HomePageState extends State<HomePage> {
   Widget bottomMenuHeader() => Ink(
         decoration: BoxDecoration(
             gradient:
-                LinearGradient(colors: [Colors.black, Colors.blueAccent])),
+                LinearGradient(colors: [Colors.black, Colors.blueGrey])),
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Row(
@@ -216,23 +223,23 @@ class HomePageState extends State<HomePage> {
               SizedBox(
                 width: 20,
               ),
-              IconButton(
-                icon: Icon(Icons.share),
-                color: Colors.blueGrey[600],
-                tooltip: 'Share',
-                onPressed: () {
-                  Share.share(result);
-                },
-              ),
-              IconButton(
-                icon: Icon(Icons.file_upload),
-                color: Colors.green[300],
-                tooltip: 'test',
-                onPressed: () {
-                  _showModalBottomSheet(context);
-                  //_getMessage("oza");
-                },
-              ),
+              // IconButton(
+              //   icon: Icon(Icons.share),
+              //   color: Colors.blueGrey[600],
+              //   tooltip: 'Share',
+              //   onPressed: () {
+              //     Share.share(result);
+              //   },
+              // ),
+              // IconButton(
+              //   icon: Icon(Icons.file_upload),
+              //   color: Colors.green[300],
+              //   tooltip: 'test',
+              //   onPressed: () {
+              //     _showModalBottomSheet(context);
+              //     //_getMessage("oza");
+              //   },
+              // ),
             ],
           ),
         ),
@@ -248,12 +255,17 @@ class HomePageState extends State<HomePage> {
                   height: 20,
                 ),
                 SizedBox(
-                  width: 360,
+                  width: double.infinity,
                   child: Center(
-                    child: Text(
-                      result,
-                      style: new TextStyle(
-                          fontSize: 30.0, fontWeight: FontWeight.bold),
+                    child: Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(30.0),
+                        child: Text(
+                          result,
+                          style: new TextStyle(
+                              fontSize: 30.0, fontWeight: FontWeight.bold),
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -274,18 +286,18 @@ class HomePageState extends State<HomePage> {
         ],
       );
 
-  Widget txDefaultAppBar() => AppBar(
-        title: Text("QR Scanner"),
-        actions: <Widget>[
-          IconButton(
-            icon: Icon(Icons.share),
-            tooltip: 'Search',
-            onPressed: () {
-              Share.share(result);
-            },
-          ),
-        ],
-      );
+  // Widget txDefaultAppBar() => AppBar(
+  //       title: Text("QR Scanner"),
+  //       actions: <Widget>[
+  //         IconButton(
+  //           icon: Icon(Icons.share),
+  //           tooltip: 'Search',
+  //           onPressed: () {
+  //             Share.share(result);
+  //           },
+  //         ),
+  //       ],
+  //     );
 
   @override
   Widget build(BuildContext context) {
@@ -293,11 +305,12 @@ class HomePageState extends State<HomePage> {
       body: txSliverList(),
       floatingActionButton: Builder(builder: (BuildContext myContext) {
         return FloatingActionButton.extended(
-            icon: Icon(Icons.camera_alt),
-            label: Text("Scan"),
+            icon: Icon(Icons.adb),
+            label: Text("Go"),
             onPressed: () async {
               //_scanQR(myContext);
-              _scan();
+              //_scan();
+              _showModalBottomSheet(context);
             });
       }),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
