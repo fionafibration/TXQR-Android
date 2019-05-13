@@ -38,6 +38,7 @@
         </activity>
         <activity android:name="com.apptreesoftware.barcodescan.BarcodeScannerActivity"/>
         <activity android:name="dev.novalogic.txqrfincrypt.BarcodeScannerActivity" />
+        <activity android:name=".AltBarcodeScannerActivity" />
 
     </application>
 </manifest>

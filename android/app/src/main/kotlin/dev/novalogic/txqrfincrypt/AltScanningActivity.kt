@@ -6,19 +6,17 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
-import com.google.zxing.Result
-import me.dm7.barcodescanner.zxing.ZXingScannerView
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import me.dm7.barcodescanner.zbar.Result
+import me.dm7.barcodescanner.zbar.ZBarScannerView
 import java.util.*
 
-
-class BarcodeScannerActivity : Activity(), ZXingScannerView.ResultHandler {
-
-    lateinit var scannerView: ZXingScannerView
+class AltBarcodeScannerActivity : Activity(), ZBarScannerView.ResultHandler {
+    lateinit var scannerView: ZBarScannerView
     lateinit var mLtDecoder: LTDecoder
     var progress : Double = 0.0
 
@@ -29,8 +27,9 @@ class BarcodeScannerActivity : Activity(), ZXingScannerView.ResultHandler {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         title = ""
-        scannerView = ZXingScannerView(this)
+        scannerView = ZBarScannerView(this)
         scannerView.setAutoFocus(true)
         // this parameter will make your HUAWEI phone work great!
         scannerView.setAspectTolerance(0.5f)
@@ -74,13 +73,13 @@ class BarcodeScannerActivity : Activity(), ZXingScannerView.ResultHandler {
         scannerView.stopCamera()
     }
 
-    override fun handleResult(result: Result?) { //Handles the results of the scan and recursively calls the scanner to complete decoding
+    override fun handleResult(result: Result?) {
         val intent = Intent()
         val messageToBeam: String
 
         progress = try {
-            Log.v("QR_SEEN", "QR Data: ${result!!.text}")
-            mLtDecoder.decodeBytes(Base64.getDecoder().decode(result.text.toByteArray(Charsets.UTF_8))) * 100
+            Log.v("QR_SEEN", "QR Data: ${result!!.contents}")
+            mLtDecoder.decodeBytes(Base64.getDecoder().decode(result.contents.toByteArray(Charsets.UTF_8))) * 100
         } catch (e: Throwable) {
             Log.e("QR_ERROR", "Exception decoding QR code!", e)
             progress

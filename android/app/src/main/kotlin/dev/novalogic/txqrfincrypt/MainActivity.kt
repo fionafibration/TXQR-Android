@@ -22,20 +22,18 @@ class MainActivity : FlutterActivity() {
         GeneratedPluginRegistrant.registerWith(this)
 
         MethodChannel(flutterView, CHANNEL).setMethodCallHandler { call, Result ->
-            if (call.method == "decodeMessage") {
-                val message = decodeMessage(call.arguments as String)
-
-                if (message.isNotEmpty()) {
-                    Result.success(message)
-                } else {
-                    Result.error("NOPE", "No message returned", null)
+            when {
+                call.method == "altScan" -> {
+                    this.result = Result
+                    val intent = Intent(this, AltBarcodeScannerActivity::class.java)
+                    this.startActivityForResult(intent, 100)
                 }
-            } else if (call.method == "scan") {
-                this.result = Result
-                val intent = Intent(this, BarcodeScannerActivity::class.java)
-                this.startActivityForResult(intent, 100)
-            } else {
-                Result.notImplemented()
+                call.method == "scan" -> {
+                    this.result = Result
+                    val intent = Intent(this, BarcodeScannerActivity::class.java)
+                    this.startActivityForResult(intent, 100)
+                }
+                else -> Result.notImplemented()
             }
         }
     }
@@ -51,67 +49,6 @@ class MainActivity : FlutterActivity() {
                 this.result?.error(errorCode, null, null)
             }
         }
-    }
-
-    private val mLtDecoder = LTDecoder()
-    private fun decodeMessage(rawResult: String): List<Any> {
-
-//        if (!Python.isStarted()) {
-//            Python.start(AndroidPlatform(this))
-//        }
-
-//        val pProgress = 0.0f
-////        var messageToBeam: List<Any>
-////
-////        val progress = try {
-////            mLtDecoder.decodeBytes(rawResult.toByteArray()) * 100
-////        } catch (e: Throwable) {
-////            pProgress
-////        }
-////
-////        if (!mLtDecoder.done) {
-////            messageToBeam = listOf("DECODE.NOT_DONE", progress)
-////        } else {
-////            var beamedMessage: ByteArray? = null
-////            try {
-////                val b64beamMessage = mLtDecoder.decodeDump()
-////                beamedMessage = Base64.getDecoder().decode(b64beamMessage)
-////            } catch (e: Throwable) {
-////                //NOPE
-////            }
-////            messageToBeam = listOf(String(beamedMessage!!), progress)
-////        }
-
-//        if (Python.isStarted()) {
-//            val mLtDecoder = try {
-//                lterrorcorrection.LTDecoder()
-//            } catch (E: Exception) {
-//                return "Nope"
-//            }
-//
-//            val progress = try {
-//                mLtDecoder.decode_bytes(rawResult) * 100
-//            } catch (e: Throwable) {
-//                pProgress
-//            }
-//
-//            if (!mLtDecoder.is_done) {
-//                messageToBeam = "DECODE.NOT_DONE"
-//            } else {
-//                var beamedMessage: ByteArray? = null
-//                try {
-//                    val b64beamMessage = mLtDecoder.bytes_dump()
-//                    beamedMessage = Base64.getDecoder().decode(b64beamMessage)
-//                } catch (e: Throwable) {
-//                    //NOPE
-//                }
-//                messageToBeam = String(beamedMessage!!)
-//            }
-//        } else {
-//            messageToBeam = "We Could not Start Python the dev fucked up"
-//        }
-
-        return listOf()//messageToBeam
     }
 }
 

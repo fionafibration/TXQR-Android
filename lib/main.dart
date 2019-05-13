@@ -28,9 +28,9 @@ class HomePageState extends State<HomePage> {
   // Get the message
   String _message = 'No Message';
 
-  Future<void> _scan() async {
+  Future<void> _scan(String methodToInvoke) async {
     try {
-      String rslt = await platform.invokeMethod('scan');
+      String rslt = await platform.invokeMethod(methodToInvoke);
       setState(() {
         result = rslt;
         _message = "A Message was decoded YAY";
@@ -123,7 +123,7 @@ class HomePageState extends State<HomePage> {
                       height: 40,
                       child: GridView.count(
                         crossAxisSpacing: 2,
-                        crossAxisCount: 2,
+                        crossAxisCount: 3,
                         children: <Widget>[
                           IconButton(
                             iconSize: 40,
@@ -140,7 +140,16 @@ class HomePageState extends State<HomePage> {
                             color: Colors.blueGrey[600],
                             tooltip: 'Scan a TxQR',
                             onPressed: () {
-                              _scan();
+                              _scan('scan');
+                            },
+                          ),
+                          IconButton(
+                            iconSize: 40,
+                            icon: Icon(Icons.camera),
+                            color: Colors.blueGrey[600],
+                            tooltip: 'Alternate Scanner',
+                            onPressed: () {
+                              _scan('altScan');
                             },
                           ),
                         ],
@@ -343,7 +352,7 @@ class HomePageState extends State<HomePage> {
       floatingActionButton: Builder(builder: (BuildContext myContext) {
         return FloatingActionButton.extended(
             icon: Icon(Icons.adb),
-            backgroundColor: Colors.black,
+            backgroundColor: Colors.blueGrey[900],
             label: Text("Go"),
             onPressed: () async {
               //_scanQR(myContext);
