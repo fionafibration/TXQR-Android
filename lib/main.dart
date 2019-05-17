@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 //import 'package:barcode_scan/barcode_scan.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import 'package:flutter/services.dart';
 import 'package:share/share.dart';
 
@@ -21,6 +22,7 @@ class HomePage extends StatefulWidget {
 
 class HomePageState extends State<HomePage> {
   String result = "Hey there !";
+  String path = "";
 
   static const platform = const MethodChannel('tx.novalogic.dev/fincrypt');
 
@@ -112,7 +114,7 @@ class HomePageState extends State<HomePage> {
             clipBehavior: Clip.antiAlias,
             color: Colors.white,
             child: Container(
-              height: 320,
+              height: 220,
               child: Column(
                 //mainAxisAlignment: MainAxisAlignment.spaceAround,
                 mainAxisSize: MainAxisSize.min,
@@ -123,7 +125,7 @@ class HomePageState extends State<HomePage> {
                       height: 40,
                       child: GridView.count(
                         crossAxisSpacing: 2,
-                        crossAxisCount: 3,
+                        crossAxisCount: 4,
                         children: <Widget>[
                           IconButton(
                             iconSize: 40,
@@ -152,6 +154,19 @@ class HomePageState extends State<HomePage> {
                               _scan('altScan');
                             },
                           ),
+                          IconButton(
+                            iconSize: 40,
+                            icon: Icon(Icons.code),
+                            color: Colors.blueGrey[600],
+                            tooltip: 'OutputQR v1',
+                            onPressed: () async {
+                              String path =
+                                  await platform.invokeMethod('makeQR', result);
+                              setState(() {
+                                this.path = path;
+                              });
+                            },
+                          )
                         ],
                       ),
                     ),
@@ -248,14 +263,37 @@ class HomePageState extends State<HomePage> {
           ),
           title: Row(
             children: <Widget>[
-              FlutterLogo(
-                colors: Colors.blueGrey,
-                textColor: Colors.white,
+              QrImage(
+                data: "TxQrAndroid!",
+                size: 60,
+                foregroundColor: Colors.white,
               ),
+              // FlutterLogo(
+              //   colors: Colors.blueGrey,
+              //   textColor: Colors.white,
+              // ),
               SizedBox(
                 width: 10.0,
               ),
-              Text("TxQr Fincrypt"),
+              SizedBox(
+                height: 30,
+                child: Stack(
+                  children: <Widget>[
+                    Align(
+                      alignment: Alignment.topLeft,
+                      child: Text("TxQr Fincrypt"),
+                    ),
+                    Align(
+                        alignment: Alignment.bottomLeft,
+                        child: Text(
+                          "Written by Max Paulson & Finian Blackett",
+                          style: TextStyle(
+                              fontSize: 11.0, fontWeight: FontWeight.w200),
+                        )),
+                  ],
+                ),
+              ),
+
               SizedBox(
                 width: 20,
               ),
@@ -289,6 +327,7 @@ class HomePageState extends State<HomePage> {
               children: <Widget>[
                 SizedBox(
                   height: 20,
+                  child: Text(this.path),
                 ),
                 SizedBox(
                   width: double.infinity,

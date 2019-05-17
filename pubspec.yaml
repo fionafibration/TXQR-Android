@@ -10,6 +10,8 @@ dependencies:
   cupertino_icons: ^0.1.2
   #barcode_scan: ^1.0.0
   share: ^0.6.1+1
+  qr_flutter: ^2.0.0+51
+  path_provider: ^1.1.0
 
 dev_dependencies:
   flutter_test:
