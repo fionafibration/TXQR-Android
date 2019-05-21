@@ -1,9 +1,11 @@
 package dev.novalogic.txqrfincrypt
 
+import android.util.Base64
 import android.util.Log
 import java.io.ByteArrayOutputStream
 import java.nio.ByteBuffer
 import java.util.stream.Collectors
+import java.util.zip.Deflater
 import java.util.zip.Inflater
 import kotlin.experimental.and
 import kotlin.experimental.xor
@@ -95,6 +97,10 @@ class RobustSolitonDistributionPRNG(private val k: Int) {
         return this.cdf.size
     }
 
+    fun setSeed(seed: Long) {
+        this.state = seed
+    }
+
     fun getSourceBlocks(seed: Long?): Pair<Long, MutableSet<Int>> {
         if (seed != null) {
             this.state = seed
@@ -127,6 +133,83 @@ fun xorByteArray(a: ByteArray, b: ByteArray): ByteArray? {
         return ByteArray(a.size) { index -> a[index] xor b[index] }
     }
     return null
+}
+
+
+fun split_file(data: ByteArray, blocksize: Int) : MutableList<ByteArray> {
+    return data.toList().chunked(blocksize).map {
+        it.toString().padStart(blocksize, '\u0000').toByteArray()
+    }.toMutableList()
+}
+
+fun compressBytes(data: ByteArray) : ByteArray {
+    val compressor = Deflater()
+
+    compressor.setInput(data)
+
+    val result = ByteArrayOutputStream()
+
+    while (!compressor.finished()) {
+        val buf = ByteArray(2048)
+        val count = compressor.deflate(buf)
+        result.write(buf, 0, count)
+    }
+
+    return result.toByteArray()
+}
+
+fun encoder(file: ByteArray, blocksize: Int, extra: Int) : MutableList<ByteArray> {
+    val seed = (0 until 1.shl(30) ).random()
+
+    val processed: ByteArray
+    val compressed = compressBytes(file)
+
+    var magicByte = 0x00.toByte()
+
+    if (compressed.size < file.size) {
+        processed = compressed
+        magicByte = 0x01
+    }
+    else {
+        processed = file
+    }
+
+    val blocks = split_file(processed, blocksize)
+
+    val filesize = processed.size
+
+    val generate = filesize / blocksize + (filesize / blocksize * .5).toInt() + extra
+
+    val k = blocks.size
+    val prng = RobustSolitonDistributionPRNG(k)
+
+    prng.setSeed(seed.toLong())
+
+    val outBlocks = mutableListOf<ByteArray>()
+
+    for (d in 0 until generate) {
+        var blockData = ByteArray(blocksize)
+        val data = prng.getSourceBlocks(null)
+        val blockseed = data.first
+        val blockNums = data.second
+
+        for (block in blockNums) {
+            blockData = xorByteArray(blockData, blocks[block])!!
+        }
+
+        val fullBlock = ByteBuffer.allocate(13 + blocksize)
+
+        fullBlock.put(magicByte)
+        fullBlock.putInt(filesize)
+        fullBlock.putInt(blocksize)
+        fullBlock.putInt(blockseed.toInt())
+
+        fullBlock.put(blockData)
+
+        outBlocks.add(fullBlock.toString().toByteArray())
+    }
+
+    return outBlocks.map { Base64.encode(it, Base64.DEFAULT)}.toMutableList()
 }
 
 class BlockNode(var src_nodes: MutableSet<Int>, var check: ByteArray)
