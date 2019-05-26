@@ -12,6 +12,7 @@ import android.os.Environment
 import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.github.nbadal.AnimatedGifEncoder
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.MultiFormatWriter
 import com.google.zxing.common.BitMatrix
@@ -50,17 +51,68 @@ class MainActivity : FlutterActivity() {
                     this.startActivityForResult(intent, 100)
                 }
                 call.method == "makeQR" -> {
+                    Log.v("progress", "started making codes")
                     //TODO implement QrStreamer Here, calls to QrGenerator with a string will output a code and return its android filesystem path
                     //TODO Max needs to make the class to do the gif creation, for now lets create a List<String> of paths
                     //it could be that I would use a List<BitMap> in which case I would rewrite the SaveFile Function
                     val arguments = call.arguments as String //todo call.arguments is of type any, I would expect a string for now
-                    val generator = QRGenerator(arguments, this)
-                    val path = generator.getPath()
+                    val blocks = encoder(arguments.toByteArray(), 256, 5)
+                    Log.v("progress", "data encoded")
+                    val bitmaps = mutableListOf<Bitmap>()
+                    blocks.forEach { block ->
+                        Log.v("progress", "encoding images")
+                        val qrGenerator = QRGenerator(block.toString(), this)
+                        bitmaps.add(qrGenerator.textToImageEncode(block.toString())!!)
+                    }
+                    Log.v("progress", "saving")
+                    val path = saveImage(generateGif(bitmaps), this)
                     Result.success(path)
                 }
                 else -> Result.notImplemented()
             }
         }
+    }
+
+    private fun generateGif(bitmaps: List<Bitmap>): ByteArray {
+        val byteOutStream = ByteArrayOutputStream()
+        val gifEncoder = AnimatedGifEncoder()
+        gifEncoder.start(byteOutStream)
+        bitmaps.forEach { bitmap ->
+            gifEncoder.addFrame(bitmap)
+        }
+        gifEncoder.finish()
+        return byteOutStream.toByteArray()
+    }
+
+    private fun saveImage(gifBytes: ByteArray, context: Context): String {
+        val wallpaperDirectory = File(
+                Environment
+                        .getExternalStorageDirectory()
+                        .toString() + IMAGE_DIRECTORY)
+        // have the object build the directory structure, if needed.
+
+        if (!wallpaperDirectory.exists()) {
+            Log.d("imagesDirectory", "" + wallpaperDirectory.mkdirs())
+            wallpaperDirectory.mkdirs()
+        }
+
+        try {
+            val file = File(wallpaperDirectory, Calendar.getInstance()
+                    .timeInMillis.toString() + ".gif")
+            file.createNewFile() //give read write permission
+            val fileOutputStream = FileOutputStream(file)
+            fileOutputStream.write(gifBytes)
+            MediaScannerConnection.scanFile(context,
+                    arrayOf(file.path),
+                    arrayOf("image/gif"), null)
+            fileOutputStream.close()
+            Log.d("file done", "File Saved :: ->>>>" + file.absolutePath)
+
+            return file.absolutePath
+        } catch (e1: IOException) {
+            Log.e("there was an ioException", "ioException while saving")
+        }
+        return ""
     }
 
     override fun onActivityResult(code: Int, resultCode: Int, data: Intent?) {
@@ -100,7 +152,7 @@ class MainActivity : FlutterActivity() {
             // have the object build the directory structure, if needed.
 
             if (!wallpaperDirectory.exists()) {
-                Log.d("rrrr", "" + wallpaperDirectory.mkdirs())
+                Log.d("imagesDirectory", "" + wallpaperDirectory.mkdirs())
                 wallpaperDirectory.mkdirs()
             }
 
@@ -123,7 +175,7 @@ class MainActivity : FlutterActivity() {
             return ""
         }
 
-        private fun textToImageEncode(messageData: String): Bitmap? {
+        fun textToImageEncode(messageData: String): Bitmap? {
             val bitMatrix: BitMatrix
             try {
                 bitMatrix = MultiFormatWriter().encode(
