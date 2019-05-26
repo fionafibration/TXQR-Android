@@ -146,11 +146,13 @@ fun compressBytes(data: ByteArray) : ByteArray {
     val compressor = Deflater()
 
     compressor.setInput(data)
+    compressor.finish()
 
     val result = ByteArrayOutputStream()
 
+    val buf = ByteArray(2048)
+
     while (!compressor.finished()) {
-        val buf = ByteArray(2048)
         val count = compressor.deflate(buf)
         result.write(buf, 0, count)
     }
@@ -395,7 +397,7 @@ class LTDecoder {
 
             val result = ByteArrayOutputStream()
 
-            while (!decompresser.finished()) {
+            while (!decompresser.finished() || decompresser.needsInput()) {
                 val buf = ByteArray(2048)
                 val count = decompresser.inflate(buf)
                 result.write(buf, 0, count)
