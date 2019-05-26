@@ -77,6 +77,8 @@ class MainActivity : FlutterActivity() {
         val byteOutStream = ByteArrayOutputStream()
         val gifEncoder = AnimatedGifEncoder()
         gifEncoder.start(byteOutStream)
+        gifEncoder.setRepeat(0)
+        gifEncoder.setFrameRate(3f)
         bitmaps.forEach { bitmap ->
             gifEncoder.addFrame(bitmap)
         }

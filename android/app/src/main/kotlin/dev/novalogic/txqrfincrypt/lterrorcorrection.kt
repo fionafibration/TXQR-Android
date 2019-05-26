@@ -391,15 +391,15 @@ class LTDecoder {
 
         Log.v("QR_RAW", "Raw: ${rawData.toList().joinToString(" ") {"%02x".format(it)} }")
 
-        val decoded = if (this.compressed) {
-            val decompresser = Inflater()
-            decompresser.setInput(rawData)
+        return if (compressed) {
+            val decompressor = Inflater()
+            decompressor.setInput(rawData)
 
             val result = ByteArrayOutputStream()
 
-            while (!decompresser.finished() || decompresser.needsInput()) {
+            while (!decompressor.finished() || decompressor.needsInput()) {
                 val buf = ByteArray(2048)
-                val count = decompresser.inflate(buf)
+                val count = decompressor.inflate(buf)
                 result.write(buf, 0, count)
             }
 
@@ -407,8 +407,6 @@ class LTDecoder {
         } else {
             rawData
         }
-
-        return decoded
     }
 
     private fun streamDump(): ByteArray {
