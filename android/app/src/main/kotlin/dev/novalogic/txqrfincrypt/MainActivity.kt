@@ -33,6 +33,7 @@ import java.lang.IllegalArgumentException
 class MainActivity : FlutterActivity() {
     private val methodChannel = "tx.novalogic.dev/fincrypt"
     var result : Result? = null
+    var messageToEncode: String? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -51,26 +52,33 @@ class MainActivity : FlutterActivity() {
                     this.startActivityForResult(intent, 100)
                 }
                 call.method == "makeQR" -> {
-                    Log.v("progress", "started making codes")
-                    //TODO implement QrStreamer Here, calls to QrGenerator with a string will output a code and return its android filesystem path
-                    //TODO Max needs to make the class to do the gif creation, for now lets create a List<String> of paths
-                    //it could be that I would use a List<BitMap> in which case I would rewrite the SaveFile Function
-                    val arguments = call.arguments as String //todo call.arguments is of type any, I would expect a string for now
-                    val blocks = encoder(arguments.toByteArray(), 256, 5)
-                    Log.v("progress", "data encoded")
-                    val bitmaps = mutableListOf<Bitmap>()
-                    blocks.forEach { block ->
-                        Log.v("progress", "encoding images")
-                        val qrGenerator = QRGenerator(block.toString(), this)
-                        bitmaps.add(qrGenerator.textToImageEncode(block.toString())!!)
+                    this.result = Result
+                    this.messageToEncode = call.arguments as String
+                    if (!requestStorageAccessIfNecessary(this)) {
+                        makeQR(this.messageToEncode!!)
                     }
-                    Log.v("progress", "saving")
-                    val path = saveImage(generateGif(bitmaps), this)
-                    Result.success(path)
                 }
                 else -> Result.notImplemented()
             }
         }
+    }
+
+    private fun makeQR(arguments: String) {
+        Log.v("progress", "started making codes")
+        val blocks = encoder(arguments.toByteArray(), 256, 5)
+
+        Log.v("progress", "data encoded")
+        val bitmaps = mutableListOf<Bitmap>()
+        blocks.forEach { block ->
+            Log.v("progress", "encoding images")
+            bitmaps.add(QRGenerator(
+                    block.toString(), this
+            ).textToImageEncode(block.toString())!!
+            )
+        }
+
+        Log.v("progress", "saving")
+        this.result!!.success(saveImage(generateGif(bitmaps), this))
     }
 
     private fun generateGif(bitmaps: List<Bitmap>): ByteArray {
@@ -130,14 +138,12 @@ class MainActivity : FlutterActivity() {
         }
     }
 
-    inner class QRGenerator(messageData: String, context: Context) {//TODO untested with datatypes other than String, don't fuck with this class
+    inner class QRGenerator(messageData: String, context: Context) {
         private lateinit var bitmap: Bitmap
         private lateinit var path: String
         init {
-            if(!requestStorageAccessIfNecessary(context)) {
-                bitmap = textToImageEncode(messageData)!!
-                path = saveImage(bitmap, context)
-            }
+            bitmap = textToImageEncode(messageData)!!
+            path = saveImage(bitmap, context)
         }
 
         fun getPath() : String {
@@ -213,14 +219,15 @@ class MainActivity : FlutterActivity() {
     }
 
     private fun requestStorageAccessIfNecessary(context: Context): Boolean {
-        val array = arrayOf(Manifest.permission.CAMERA)
-        if (
-                ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
-                &&
-                ContextCompat.checkSelfPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
-        ) {
-
-            ActivityCompat.requestPermissions(Activity(), array,
+        val array = arrayOf(
+                Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                Manifest.permission.READ_EXTERNAL_STORAGE
+        )
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED &&
+                ContextCompat.checkSelfPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, array,
                     REQUEST_STORAGE_PERMISSION)
             return true
         }
@@ -237,7 +244,7 @@ class MainActivity : FlutterActivity() {
         when (requestCode) {
             REQUEST_STORAGE_PERMISSION -> {
                 if (PermissionUtil.verifyPermissions(grantResults)) {
-                    //
+                    makeQR(this.messageToEncode!!)
                 } else {
                     finishWithError("PERMISSION_NOT_GRANTED")
                 }
@@ -252,7 +259,9 @@ class MainActivity : FlutterActivity() {
         const val BLACK: Int = 2130968606
         const val WHITE: Int = 2147483647
         const val REQUEST_STORAGE_PERMISSION = 101
-        const val QRCodeWidth = 968//TODO this is the resolution
+
+        //Code Resolution
+        const val QRCodeWidth = 968
         private const val IMAGE_DIRECTORY = "/QRCodeDocuments"
     }
 }
