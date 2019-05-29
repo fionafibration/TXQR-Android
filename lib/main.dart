@@ -264,7 +264,7 @@ class HomePageState extends State<HomePage> {
           title: Row(
             children: <Widget>[
               QrImage(
-                data: "TxQrAndroid!",
+                data: "v2.1.0 pre-alpha",
                 size: 60,
                 foregroundColor: Colors.white,
               ),
@@ -281,7 +281,7 @@ class HomePageState extends State<HomePage> {
                   children: <Widget>[
                     Align(
                       alignment: Alignment.topLeft,
-                      child: Text("TxQr Fincrypt"),
+                      child: Text("TxQr Messaging"),
                     ),
                     Align(
                         alignment: Alignment.bottomLeft,
