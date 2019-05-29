@@ -57,11 +57,20 @@ The migration of LtErrorcorrection and then subsequent implementation of QrStrea
 As of now, the decoding implementation works with the Original python QRStreamer package and the encoding implementation does not produce decodable data, but it is being worked on activly.
 
 ### Future Plans
-
+* V2.1.2
+	* Encoded Gif Storage and viewing
 * V2.2
-	* *placeholder
+	* Card based message storage and sending system
+		1. After decoding a message a collapsible card will be added to the home page and will contain the message.
+		2. Each card can be deleted, edited or archived or reencoded
+		3. Cards persist so long as the app remains installed
+		4. Creating a new card to send data is possible
+		5. There will be enhcancements to the Encoded management system
 * V2.3
-	* *placeholder
+	* The Errorcorrection system will be upgraded to include implementations of [RaporQ](https://openrq-team.github.io/openrq/) (this is not 100% going to happen)
+		* Upgraded QrStreamer package for desktop use
+	* A revamped encoder system will also include ability to upload and send files(Size constrains dependant on factors)
+	* TxQR will be registered as an android share action handler so other apps can send it data to be encoded
 
 ### Credits
 
