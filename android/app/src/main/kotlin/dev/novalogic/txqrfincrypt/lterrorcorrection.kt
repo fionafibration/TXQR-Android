@@ -397,7 +397,7 @@ class LTDecoder {
 
             val result = ByteArrayOutputStream()
 
-            while (!decompressor.finished() || decompressor.needsInput()) {
+            while (!decompressor.finished()) {
                 val buf = ByteArray(2048)
                 val count = decompressor.inflate(buf)
                 result.write(buf, 0, count)
