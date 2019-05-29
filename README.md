@@ -36,7 +36,6 @@ You can find detailed information about Flutter at [Flutter.dev](https://flutter
 	6. Editors: Although Flutter requires a complete Android Studio install, development is supported by [IntellijIdea](https://flutter.dev/docs/get-started/editor?tab=androidstudio) and [Visual Studio Code](https://flutter.dev/docs/get-started/editor?tab=vscode) via thier respective Flutter plugins
 	7. From here you can follow the instructions for running in your desired editor or command line here [Flutter.dev](https://flutter.dev/docs/get-started/test-drive?tab=)
 		* *Important:* Instead of following the instructions for "Create the app", instead do (your editor may run these commands automatically, but its still a good idea to do them yourself):
-		* `flutter packages upgrade`
 		* `flutter packages get`
 		* Then you can run normally
 * OSX

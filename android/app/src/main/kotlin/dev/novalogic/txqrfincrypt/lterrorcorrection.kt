@@ -160,7 +160,7 @@ fun compressBytes(data: ByteArray) : ByteArray {
     return result.toByteArray()
 }
 
-fun encoder(file: ByteArray, blocksize: Int, extra: Int) : MutableList<ByteArray> {
+fun encoder(file: ByteArray, blockSize: Int, extra: Int) : List<ByteArray> {
     val seed = (0 until 1.shl(30) ).random()
 
     val processed: ByteArray
@@ -176,11 +176,11 @@ fun encoder(file: ByteArray, blocksize: Int, extra: Int) : MutableList<ByteArray
         processed = file
     }
 
-    val blocks = split_file(processed, blocksize)
+    val blocks = split_file(processed, blockSize)
 
-    val filesize = processed.size
+    val fileSize = processed.size
 
-    val generate = filesize / blocksize + (filesize / blocksize * .5).toInt() + extra
+    val generate = fileSize / blockSize + (fileSize / blockSize * .5).toInt() + extra
 
     val k = blocks.size
     val prng = RobustSolitonDistributionPRNG(k)
@@ -190,21 +190,21 @@ fun encoder(file: ByteArray, blocksize: Int, extra: Int) : MutableList<ByteArray
     val outBlocks = mutableListOf<ByteArray>()
 
     for (d in 0 until generate) {
-        var blockData = ByteArray(blocksize)
+        var blockData = ByteArray(blockSize)
         val data = prng.getSourceBlocks(null)
-        val blockseed = data.first
+        val blockSeed = data.first
         val blockNums = data.second
 
         for (block in blockNums) {
             blockData = xorByteArray(blockData, blocks[block])!!
         }
 
-        val fullBlock = ByteBuffer.allocate(13 + blocksize)
+        val fullBlock = ByteBuffer.allocate(13 + blockSize)
 
         fullBlock.put(magicByte)
-        fullBlock.putInt(filesize)
-        fullBlock.putInt(blocksize)
-        fullBlock.putInt(blockseed.toInt())
+        fullBlock.putInt(fileSize)
+        fullBlock.putInt(blockSize)
+        fullBlock.putInt(blockSeed.toInt())
 
         fullBlock.put(blockData)
 
@@ -391,15 +391,15 @@ class LTDecoder {
 
         Log.v("QR_RAW", "Raw: ${rawData.toList().joinToString(" ") {"%02x".format(it)} }")
 
-        val decoded = if (this.compressed) {
-            val decompresser = Inflater()
-            decompresser.setInput(rawData)
+        return if (compressed) {
+            val decompressor = Inflater()
+            decompressor.setInput(rawData)
 
             val result = ByteArrayOutputStream()
 
-            while (!decompresser.finished()) {
+            while (!decompressor.finished() || decompressor.needsInput()) {
                 val buf = ByteArray(2048)
-                val count = decompresser.inflate(buf)
+                val count = decompressor.inflate(buf)
                 result.write(buf, 0, count)
             }
 
@@ -407,8 +407,6 @@ class LTDecoder {
         } else {
             rawData
         }
-
-        return decoded
     }
 
     private fun streamDump(): ByteArray {
