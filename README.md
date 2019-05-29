@@ -22,9 +22,9 @@ You can find detailed information about Flutter at [Flutter.dev](https://flutter
 	1. The latest release of Android Sudio with the Android SDK version 28 or greater
 	2. An Android device running API 26(Android Oreo 8.0) or higher *Note:* we develop using API 28 and do not guarntee runtime on API 26
 * For OSX
-	1. 
+	1. *coming soon*
 * For Linux
-	1. 
+	1. *coming soon*
 ##### Installing Flutter and setting up development environment
 * Windows
 	1. Download the [Flutter SDK](https://storage.googleapis.com/flutter_infra/releases/stable/windows/flutter_windows_v1.5.4-hotfix.2-stable.zip)
@@ -39,10 +39,30 @@ You can find detailed information about Flutter at [Flutter.dev](https://flutter
 		* `flutter packages get`
 		* Then you can run normally
 * OSX
-	1. 
+	1. *coming soon*
 * Linux
-	1. 
+	1. *coming soon*
+
+### Why We Made TxQR
+We took Divan's weekend coding project to create a transfer protocol that used Gifs of QR codes aslo known as TXQR as a challenge. This project began as a simple objective, to port the GO implementation into an all in one android app capable of sending and recieving the protocols "packets."
+
+As we soon realized that interacting with GO from within an android application was too difficult to be reasonable, Fin decided to implement the fundamental design of TXQR in python. This has two parts; An Encoder and a Decoder. The TxQR design uses gifs to transfer encoded data, because a QR reader can take time to scan a code and restart there is a high rate of data loss or disorginization as it is problematic to scan all codes in order quickly. To get around this Divan found that a method of [Forward Error Correction(FEC)](https://en.wikipedia.org/wiki/Forward_error_correction) could be used to recover lost QRCode data. In particular the FEC of choice was a specification known as [Foutain Coding](https://en.wikipedia.org/wiki/Fountain_code) and more specifically an implementation called [Luby Transform](https://en.wikipedia.org/wiki/Luby_transform_code). I wont bother explaning FEC, Foutain Coding and Luby Tranform in depth, but simply put the idea is that by taking the data we want to send and adding extra data, we can then use some mathematic trickery to find out what the original data was from a subset of the total data (the original message and the extra).
+
+Our original python implementation was two projects, LtErrorcorrection was the decoder and QrStreamer was the encoder. Using a SDK plugin for using Python in Android known as ChaquoPy we implemented a QRReader that was specifically designed to use LtErrorcorrection to decode the gifs created by QrStreamer. The original TxQR Messaging (V1.x) was deveoped using the Android platform and appcompat activities which meant that it lacked a certain UI modernity that Nova found particulary annoying.
+
+In order to continue development, the decision was made to migrate the application to Flutter which is a cross platfrom application development SDK written in Dart by Google. This had many benefits, the UI could be prototyped quickly thanks to the lack of XML layouts and Hot Reloading. The use of method channels to platfrom implementations meant that the heavy logic we needed to implement for Encoding and Decoding could be done in Android just like before. But of course as with any platfrom change there were some issues. Firstly ChaquoPy would not function correctly in our Android module and as such the entirity of LtErrorcorrection had to be migrated from Python to Kotlin.
+
+The migration of LtErrorcorrection and then subsequent implementation of QrStreamer has be fraught with problems. Due to Fins inexperience with Kotlin the whole implementation is and has served as a learning experience for him and as only natural there are issues that popup for weird reasons due to the difference between ways to poblem solve in Kotlin and Python.
+
+As of now, the decoding implementation works with the Original python QRStreamer package and the encoding implementation does not produce decodable data, but it is being worked on activly.
+
+### Future Plans
+
+* V2.2
+	* *placeholder
+* V2.3
+	* *placeholder
 
 ### Credits
 
-Uses a slightly modified port of [anrosent's LT coding library](https://github.com/anrosent/LT-Code) to perform LT coding. Inspired by (but incompatible with) [divan's TXQR for iPhones](https://github.com/divan/txqr)
+Uses a slightly modified port of [anrosent's LT coding library](https://github.com/anrosent/LT-Code) to perform Luby Transform Foutain coding. Inspired by (but incompatible with) [divan's TXQR for iPhones](https://github.com/divan/txqr)
