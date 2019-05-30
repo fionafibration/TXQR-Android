@@ -15,3 +15,5 @@ build/
 local.properties
 
 TxQRWorkapce.code-workspace
+
+key.properties
