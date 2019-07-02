@@ -79,7 +79,7 @@ class AltBarcodeScannerActivity : Activity(), ZBarScannerView.ResultHandler {
 
         progress = try {
             Log.v("QR_SEEN", "QR Data: ${result!!.contents}")
-            mLtDecoder.decodeBytes(Base64.getDecoder().decode(result.contents.toByteArray(Charsets.UTF_8))) * 100
+            mLtDecoder.decodeBytes(result.contents.toByteArray(Charsets.UTF_8)) * 100
         } catch (e: Throwable) {
             Log.e("QR_ERROR", "Exception decoding QR code!", e)
             progress
