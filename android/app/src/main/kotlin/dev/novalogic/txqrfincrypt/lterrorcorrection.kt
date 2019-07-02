@@ -1,9 +1,10 @@
 package dev.novalogic.txqrfincrypt
 
 import android.util.Base64
-import android.util.Log
 import java.io.ByteArrayOutputStream
 import java.nio.ByteBuffer
+import java.nio.ByteOrder
+import java.util.Arrays.copyOf
 import java.util.stream.Collectors
 import java.util.zip.Deflater
 import java.util.zip.Inflater
@@ -136,13 +137,13 @@ fun xorByteArray(a: ByteArray, b: ByteArray): ByteArray? {
 }
 
 
-fun split_file(data: ByteArray, blocksize: Int) : MutableList<ByteArray> {
+fun split_file(data: ByteArray, blocksize: Int): MutableList<ByteArray> {
     return data.toList().chunked(blocksize).map {
-        it.toString().padStart(blocksize, '\u0000').toByteArray()
+        copyOf(it.toByteArray(), blocksize)
     }.toMutableList()
 }
 
-fun compressBytes(data: ByteArray) : ByteArray {
+fun compressBytes(data: ByteArray): ByteArray {
     val compressor = Deflater()
 
     compressor.setInput(data)
@@ -160,10 +161,26 @@ fun compressBytes(data: ByteArray) : ByteArray {
     return result.toByteArray()
 }
 
-fun encoder(file: ByteArray, blockSize: Int, extra: Int) : List<ByteArray> {
-    val seed = (0 until 1.shl(30) ).random()
+fun decompressBytes(data: ByteArray): ByteArray {
+    val decompressor = Inflater()
+    decompressor.setInput(data)
+
+    val result = ByteArrayOutputStream()
+
+    while (!decompressor.finished()) {
+        val buf = ByteArray(2048)
+        val count = decompressor.inflate(buf)
+        result.write(buf, 0, count)
+    }
+
+    return result.toByteArray()
+}
+
+fun encoder(file: ByteArray, blockSize: Int, extra: Int): List<ByteArray> {
+    val seed = (0 until 1.shl(30)).random()
 
     val processed: ByteArray
+
     val compressed = compressBytes(file)
 
     var magicByte = 0x00.toByte()
@@ -171,8 +188,7 @@ fun encoder(file: ByteArray, blockSize: Int, extra: Int) : List<ByteArray> {
     if (compressed.size < file.size) {
         processed = compressed
         magicByte = 0x01
-    }
-    else {
+    } else {
         processed = file
     }
 
@@ -199,19 +215,24 @@ fun encoder(file: ByteArray, blockSize: Int, extra: Int) : List<ByteArray> {
             blockData = xorByteArray(blockData, blocks[block])!!
         }
 
-        val fullBlock = ByteBuffer.allocate(13 + blockSize)
+        val fullBlock = ByteBuffer.allocate(13 + blockSize).order(ByteOrder.BIG_ENDIAN)
 
         fullBlock.put(magicByte)
+
         fullBlock.putInt(fileSize)
+
         fullBlock.putInt(blockSize)
+
         fullBlock.putInt(blockSeed.toInt())
 
-        fullBlock.put(blockData)
+        fullBlock.put(ByteBuffer.wrap(blockData))
 
-        outBlocks.add(fullBlock.toString().toByteArray())
+        val out = fullBlock.array()
+
+        outBlocks.add(out)
     }
 
-    return outBlocks.map { Base64.encode(it, Base64.DEFAULT)}.toMutableList()
+    return outBlocks.map { Base64.encode(it, Base64.DEFAULT) }.toMutableList()
 }
 
 class BlockNode(var src_nodes: MutableSet<Int>, var check: ByteArray)
@@ -243,7 +264,8 @@ class BlockGraph(private var k: Int) {
             iter.forEach {
                 if (this.eliminated.keys.contains(it)) {
                     iter.remove()
-                    data = xorByteArray(data,
+                    data = xorByteArray(
+                            data,
                             this.eliminated.getOrDefault(it, ByteArray(0))
                     )!!
                 }
@@ -298,8 +320,10 @@ class BlockGraph(private var k: Int) {
     }
 }
 
-class BlockData(val magic_byte: Byte, val filesize: Int, val blocksize: Int,
-                val blockseed: Int, val block: ByteArray)
+class BlockData(
+        val magic_byte: Byte, val filesize: Int, val blocksize: Int,
+        val blockseed: Int, val block: ByteArray
+)
 
 class NotDecodedException(message: String) : Exception(message)
 
@@ -329,13 +353,12 @@ class LTDecoder {
 
 
     private fun consumeBlock(lt_block: BlockData): Double {
+
         val magicByte = lt_block.magic_byte
         val filesize = lt_block.filesize
         val blocksize = lt_block.blocksize
         val blockseed = lt_block.blockseed
         val block = lt_block.block
-
-        Log.v("QR_METADATA", "Filesize: ${filesize}, Blocksize: ${blocksize}")
 
         if (magicByte and 0x01.toByte() != 0.toByte()) {
             this.compressed = true
@@ -365,13 +388,12 @@ class LTDecoder {
     }
 
     fun decodeBytes(block_bytes: ByteArray): Double {
-        val magicByte = block_bytes[0]
-        val header = block_bytes.slice(IntRange(1, 12))
-        val rest = block_bytes.slice(IntRange(13, block_bytes.lastIndex))
 
-        Log.v("QR_MAGIC", "%02x".format(magicByte))
+        val decoded = Base64.decode(block_bytes, Base64.DEFAULT)
 
-        Log.v("QR_HEADER", header.joinToString("") { java.lang.String.format("%02x", it) } + ", Length: ${header.size}")
+        val magicByte = decoded[0]
+        val header = decoded.slice(IntRange(1, 12))
+        val rest = decoded.slice(IntRange(13, decoded.lastIndex))
 
         val headerBuffer = ByteBuffer.allocate(12).put(header.toByteArray())
 
@@ -389,21 +411,8 @@ class LTDecoder {
     fun decodeDump(): ByteArray {
         val rawData = this.streamDump()
 
-        Log.v("QR_RAW", "Raw: ${rawData.toList().joinToString(" ") {"%02x".format(it)} }")
-
         return if (compressed) {
-            val decompressor = Inflater()
-            decompressor.setInput(rawData)
-
-            val result = ByteArrayOutputStream()
-
-            while (!decompressor.finished()) {
-                val buf = ByteArray(2048)
-                val count = decompressor.inflate(buf)
-                result.write(buf, 0, count)
-            }
-
-            result.toByteArray()
+            decompressBytes(rawData)
         } else {
             rawData
         }
