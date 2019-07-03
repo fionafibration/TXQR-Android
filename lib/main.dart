@@ -283,6 +283,7 @@ class HomePageState extends State<HomePage> {
                       alignment: Alignment.topLeft,
                       child: Text("TxQr Messaging"),
                     ),
+                    Spacer(flex: 1,),
                     Align(
                         alignment: Alignment.bottomLeft,
                         child: Text(

@@ -29,6 +29,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.lang.IllegalArgumentException
+import java.nio.charset.Charset
 
 class MainActivity : FlutterActivity() {
     private val methodChannel = "tx.novalogic.dev/fincrypt"
@@ -73,7 +74,7 @@ class MainActivity : FlutterActivity() {
             Log.v("progress", "encoding images")
             bitmaps.add(QRGenerator(
                     block.toString(), this
-            ).textToImageEncode(block.toString())!!
+            ).textToImageEncode(String(block, Charset.forName("UTF-8")))!!
             )
         }
 
