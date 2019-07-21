@@ -264,14 +264,12 @@ class HomePageState extends State<HomePage> {
           title: Row(
             children: <Widget>[
               QrImage(
-                data: "v2.1.0 pre-alpha",
+                data: "v2.1.2 alpha",
                 size: 60,
-                foregroundColor: Colors.white,
+                foregroundColor: Colors.black,
+                backgroundColor: Colors.white,
+                version: 1,
               ),
-              // FlutterLogo(
-              //   colors: Colors.blueGrey,
-              //   textColor: Colors.white,
-              // ),
               SizedBox(
                 width: 10.0,
               ),
@@ -283,7 +281,6 @@ class HomePageState extends State<HomePage> {
                       alignment: Alignment.topLeft,
                       child: Text("TxQr Messaging"),
                     ),
-                    Spacer(flex: 1,),
                     Align(
                         alignment: Alignment.bottomLeft,
                         child: Text(

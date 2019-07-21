@@ -73,7 +73,7 @@ class MainActivity : FlutterActivity() {
         blocks.forEach { block ->
             Log.v("progress", "encoding images")
             bitmaps.add(QRGenerator(
-                    block.toString(), this
+                    String(block, Charset.forName("UTF-8")), this
             ).textToImageEncode(String(block, Charset.forName("UTF-8")))!!
             )
         }
