@@ -66,6 +66,8 @@ As of now, the decoding implementation works with the Original python QRStreamer
 		3. Cards persist so long as the app remains installed
 		4. Creating a new card to send data is possible
 		5. There will be enhcancements to the Encoded management system
+* V2.3-pre(tentative)
+    * Website with support for sending and receiving messages on the desktop
 * V2.3
 	* The Errorcorrection system will be upgraded to include implementations of [RaporQ](https://openrq-team.github.io/openrq/) (this is not 100% going to happen)
 		* Upgraded QrStreamer package for desktop use

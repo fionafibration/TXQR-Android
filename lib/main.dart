@@ -32,9 +32,9 @@ class HomePageState extends State<HomePage> {
 
   Future<void> _scan(String methodToInvoke) async {
 	try {
-	  String rslt = await platform.invokeMethod(methodToInvoke);
+	  String result = await platform.invokeMethod(methodToInvoke);
 	  setState(() {
-		result = rslt;
+		result = result;
 		_message = "A Message was decoded YAY";
 	  });
 	} on PlatformException catch (ex) {
