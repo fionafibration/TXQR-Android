@@ -1,4 +1,5 @@
 import 'package:moor_flutter/moor_flutter.dart';
+import 'package:txqrfincrypt/src/app_state_singleton.dart';
 export 'package:moor_flutter/moor_flutter.dart' show Value;
 
 /*
@@ -28,48 +29,71 @@ class Messages extends Table {
   TextColumn get metaContent => text().nullable()();
 
   //The mimeType is something like 	text/plain which will inform a builder on how to handle the bodies content
-  TextColumn get mimeType => text().withDefault(const Constant("text/plain"))();
+  TextColumn get mimeType => text()();
 
   //Makes messages easier to recognize in lists
-  TextColumn get title => text()
-      .withLength(min: 6, max: 32)
-      .withDefault(const Constant("Default Title"))();
+  TextColumn get title => text().withLength(min: 6, max: 32)();
 
   //The message content
   TextColumn get content => text().named('body')();
+
+  //The id of the Codes entry where a realted code can be found, if the item is of category 1
+  IntColumn get codeLocationId => integer().nullable()();
 
   //Category 0,1 where 0 is page 0 and 1 is page 1
   IntColumn get category => integer()();
 }
 
+class Codes extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get path => text()();
+}
+
 // this annotation tells moor to prepare a database class that uses both of the
 // tables we just defined. We'll see how to use that database class in a moment.
-@UseMoor(tables: [Messages])
+@UseMoor(tables: [Messages, Codes])
 class TxQrData extends _$TxQrData {
   // we tell the database where to store the data with this constructor
-  TxQrData() : super(FlutterQueryExecutor.inDatabaseFolder(path: 'db.sqlite'));
+  TxQrData()
+      : super(FlutterQueryExecutor.inDatabaseFolder(path: 'txqrdb.sqlite'));
 
   //bump this number whenever you change or add a table definition
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 5;
 
   // returns the generated id
-  Future<int> addTodoEntry(MessagesCompanion entry) {
+  Future<int> addNewMessageEntry(MessagesCompanion entry) {
+    appData.onDataInsert();
     return into(messages).insert(entry);
   }
 
   // loads all message entries
-  Future<List<Message>> get allTodoEntries => select(messages).get();
+  Future<List<Message>> get allMessageEntries => select(messages).get();
+
+  // delete the item by its id
+  Future deleteMessageById(int id) {
+    return (delete(messages)..where((item) => item.id.equals(id))).go();
+  }
+
+  // delete all items
+  Future deleteMessage(int howMany) {
+    return (delete(messages)
+          ..where((item) => item.id.isSmallerThanValue(howMany)))
+        .go();
+  }
+
+  //isSmallerThanValue(10)
 
   // loads all messages sorted alphabetically
-  Future<List<Message>> sortEntriesAlphabetically() {
-    return (select(messages)..orderBy([(t) => OrderingTerm(expression: t.title)]))
+  Future<List<Message>> sortMessageEntriesAlphabetically() {
+    return (select(messages)
+          ..orderBy([(t) => OrderingTerm(expression: t.title)]))
         .get();
   }
 
   // watches all mesaage entries in a given category. The stream will automatically
   // emit new items whenever the underlying data changes.
-  Stream<List<Message>> watchEntriesInCategory(int c) {
+  Stream<List<Message>> watchMessageEntriesInCategory(int c) {
     return (select(messages)..where((t) => t.category.equals(c))).watch();
   }
 }

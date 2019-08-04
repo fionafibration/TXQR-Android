@@ -182,8 +182,11 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
   @override
   GeneratedTextColumn get mimeType => _mimeType ??= _constructMimeType();
   GeneratedTextColumn _constructMimeType() {
-    return GeneratedTextColumn('mime_type', $tableName, false,
-        defaultValue: const Constant("text/plain"));
+    return GeneratedTextColumn(
+      'mime_type',
+      $tableName,
+      false,
+    );
   }
 
   final VerificationMeta _titleMeta = const VerificationMeta('title');
@@ -192,9 +195,7 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
   GeneratedTextColumn get title => _title ??= _constructTitle();
   GeneratedTextColumn _constructTitle() {
     return GeneratedTextColumn('title', $tableName, false,
-        minTextLength: 6,
-        maxTextLength: 32,
-        defaultValue: const Constant("Default Title"));
+        minTextLength: 6, maxTextLength: 32);
   }
 
   final VerificationMeta _contentMeta = const VerificationMeta('content');
@@ -310,10 +311,156 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
   }
 }
 
+class Code extends DataClass implements Insertable<Code> {
+  final int id;
+  final String path;
+  Code({@required this.id, @required this.path});
+  factory Code.fromData(Map<String, dynamic> data, GeneratedDatabase db,
+      {String prefix}) {
+    final effectivePrefix = prefix ?? '';
+    final intType = db.typeSystem.forDartType<int>();
+    final stringType = db.typeSystem.forDartType<String>();
+    return Code(
+      id: intType.mapFromDatabaseResponse(data['${effectivePrefix}id']),
+      path: stringType.mapFromDatabaseResponse(data['${effectivePrefix}path']),
+    );
+  }
+  factory Code.fromJson(Map<String, dynamic> json,
+      {ValueSerializer serializer = const ValueSerializer.defaults()}) {
+    return Code(
+      id: serializer.fromJson<int>(json['id']),
+      path: serializer.fromJson<String>(json['path']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson(
+      {ValueSerializer serializer = const ValueSerializer.defaults()}) {
+    return {
+      'id': serializer.toJson<int>(id),
+      'path': serializer.toJson<String>(path),
+    };
+  }
+
+  @override
+  T createCompanion<T extends UpdateCompanion<Code>>(bool nullToAbsent) {
+    return CodesCompanion(
+      id: id == null && nullToAbsent ? const Value.absent() : Value(id),
+      path: path == null && nullToAbsent ? const Value.absent() : Value(path),
+    ) as T;
+  }
+
+  Code copyWith({int id, String path}) => Code(
+        id: id ?? this.id,
+        path: path ?? this.path,
+      );
+  @override
+  String toString() {
+    return (StringBuffer('Code(')
+          ..write('id: $id, ')
+          ..write('path: $path')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => $mrjf($mrjc($mrjc(0, id.hashCode), path.hashCode));
+  @override
+  bool operator ==(other) =>
+      identical(this, other) ||
+      (other is Code && other.id == id && other.path == path);
+}
+
+class CodesCompanion extends UpdateCompanion<Code> {
+  final Value<int> id;
+  final Value<String> path;
+  const CodesCompanion({
+    this.id = const Value.absent(),
+    this.path = const Value.absent(),
+  });
+}
+
+class $CodesTable extends Codes with TableInfo<$CodesTable, Code> {
+  final GeneratedDatabase _db;
+  final String _alias;
+  $CodesTable(this._db, [this._alias]);
+  final VerificationMeta _idMeta = const VerificationMeta('id');
+  GeneratedIntColumn _id;
+  @override
+  GeneratedIntColumn get id => _id ??= _constructId();
+  GeneratedIntColumn _constructId() {
+    return GeneratedIntColumn('id', $tableName, false, hasAutoIncrement: true);
+  }
+
+  final VerificationMeta _pathMeta = const VerificationMeta('path');
+  GeneratedTextColumn _path;
+  @override
+  GeneratedTextColumn get path => _path ??= _constructPath();
+  GeneratedTextColumn _constructPath() {
+    return GeneratedTextColumn(
+      'path',
+      $tableName,
+      false,
+    );
+  }
+
+  @override
+  List<GeneratedColumn> get $columns => [id, path];
+  @override
+  $CodesTable get asDslTable => this;
+  @override
+  String get $tableName => _alias ?? 'codes';
+  @override
+  final String actualTableName = 'codes';
+  @override
+  VerificationContext validateIntegrity(CodesCompanion d,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    if (d.id.present) {
+      context.handle(_idMeta, id.isAcceptableValue(d.id.value, _idMeta));
+    } else if (id.isRequired && isInserting) {
+      context.missing(_idMeta);
+    }
+    if (d.path.present) {
+      context.handle(
+          _pathMeta, path.isAcceptableValue(d.path.value, _pathMeta));
+    } else if (path.isRequired && isInserting) {
+      context.missing(_pathMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  Code map(Map<String, dynamic> data, {String tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : null;
+    return Code.fromData(data, _db, prefix: effectivePrefix);
+  }
+
+  @override
+  Map<String, Variable> entityToSql(CodesCompanion d) {
+    final map = <String, Variable>{};
+    if (d.id.present) {
+      map['id'] = Variable<int, IntType>(d.id.value);
+    }
+    if (d.path.present) {
+      map['path'] = Variable<String, StringType>(d.path.value);
+    }
+    return map;
+  }
+
+  @override
+  $CodesTable createAlias(String alias) {
+    return $CodesTable(_db, alias);
+  }
+}
+
 abstract class _$TxQrData extends GeneratedDatabase {
   _$TxQrData(QueryExecutor e) : super(const SqlTypeSystem.withDefaults(), e);
   $MessagesTable _messages;
   $MessagesTable get messages => _messages ??= $MessagesTable(this);
+  $CodesTable _codes;
+  $CodesTable get codes => _codes ??= $CodesTable(this);
   @override
-  List<TableInfo> get allTables => [messages];
+  List<TableInfo> get allTables => [messages, codes];
 }

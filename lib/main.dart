@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:share/share.dart';
 import 'package:txqrfincrypt/src/app_state_singleton.dart';
+import 'package:txqrfincrypt/src/tx_database.dart';
 import 'package:txqrfincrypt/src/widgets/recieve.dart';
 import 'package:txqrfincrypt/src/widgets/send.dart';
 
@@ -71,60 +72,86 @@ class HomePageState extends State<HomePage> {
             child: Container(
               height: 220,
               child: Column(
-                //mainAxisAlignment: MainAxisAlignment.spaceAround,
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
                   bottomMenuHeader(),
                   Expanded(
-                    child: SizedBox(
-                      height: 40,
-                      child: GridView.count(
-                        crossAxisSpacing: 2,
-                        crossAxisCount: 4,
-                        children: <Widget>[
-                          IconButton(
-                            iconSize: 40,
-                            icon: Icon(Icons.share),
-                            color: Colors.blueGrey[600],
-                            tooltip: 'Share',
-                            onPressed: () {
-                              Share.share(appData.result);
-                            },
-                          ),
-                          IconButton(
-                            iconSize: 40,
-                            icon: Icon(Icons.camera_alt),
-                            color: Colors.blueGrey[600],
-                            tooltip: 'Scan a TxQR',
-                            onPressed: () {
-                              _scan('scan');
-                            },
-                          ),
-                          IconButton(
-                            iconSize: 40,
-                            icon: Icon(Icons.camera),
-                            color: Colors.blueGrey[600],
-                            tooltip: 'Alternate Scanner',
-                            onPressed: () {
-                              _scan('altScan');
-                            },
-                          ),
-                          IconButton(
-                            iconSize: 40,
-                            icon: Icon(Icons.code),
-                            color: Colors.blueGrey[600],
-                            tooltip: 'OutputQR v1',
-                            onPressed: () async {
-                              String path =
-                                  await platform.invokeMethod('makeQR', appData.result);
-                              setState(() {
-                                appData.path = path;
-                              });
-                            },
-                          )
-                        ],
-                      ),
+                    //child: SizedBox(
+                    //height: 80,
+                    child: Wrap(
+                      direction: Axis.horizontal,
+                      spacing: 10,
+                      // crossAxisSpacing: 2,
+                      // crossAxisCount: 4,
+                      children: <Widget>[
+                        IconButton(
+                          iconSize: 50,
+                          icon: Icon(Icons.share),
+                          color: Colors.blueGrey[600],
+                          tooltip: 'Share',
+                          onPressed: () {
+                            Share.share(appData.result);
+                          },
+                        ),
+                        IconButton(
+                          iconSize: 50,
+                          icon: Icon(Icons.camera_alt),
+                          color: Colors.blueGrey[600],
+                          tooltip: 'Scan a TxQR',
+                          onPressed: () {
+                            _scan('scan');
+                          },
+                        ),
+                        IconButton(
+                          iconSize: 50,
+                          icon: Icon(Icons.camera),
+                          color: Colors.blueGrey[600],
+                          tooltip: 'Alternate Scanner',
+                          onPressed: () {
+                            _scan('altScan');
+                          },
+                        ),
+                        IconButton(
+                          iconSize: 50,
+                          icon: Icon(Icons.code),
+                          color: Colors.blueGrey[600],
+                          tooltip: 'OutputQR v1',
+                          onPressed: () async {
+                            String path = await platform.invokeMethod(
+                                'makeQR', appData.result);
+                            setState(() {
+                              appData.path = path;
+                            });
+                          },
+                        ),
+                        //THE FOLLOWING ARE DEBUG BUTTONS FOR TESTING
+                        IconButton(
+                          iconSize: 50,
+                          icon: Icon(Icons.add),
+                          color: Colors.blueGrey[600],
+                          tooltip: "DEBUG BUTTON 1",
+                          onPressed: () async {
+                            int id = await TxQrData().addNewMessageEntry(
+                                MessagesCompanion(
+                                    title: Value("A New Item"),
+                                    category: Value(0),
+                                    content: Value("NTRY ITEM CONTENT"),
+                                    mimeType: Value("text/plain")));
+                            print(id);
+                          },
+                        ),
+                        IconButton(
+                          iconSize: 50,
+                          icon: Icon(Icons.check_box),
+                          color: Colors.blueGrey[600],
+                          tooltip: "DEBUG BUTTON 2",
+                          onPressed: () async {
+                            print(await TxQrData().allMessageEntries);
+                          },
+                        ),
+                      ],
                     ),
+                    //),
                   ),
                 ],
               ),

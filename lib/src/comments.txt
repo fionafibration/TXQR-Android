@@ -122,3 +122,29 @@ THIS IS WASTE CODE THAT I MAY WANT, DO NOT DELTETE FROM THIS FILE
                   //     //_getMessage("oza");
                   //   },
                   // ),
+
+
+                  
+  // SliverList(
+  //       delegate: SliverChildListDelegate([
+  //         SizedBox(
+  //           height: 60,
+  //           width: 120,
+  //           child: 
+  //         ),
+  //         SizedBox(
+  //           height: 60,
+  //           width: 120,
+  //           child: IconButton(
+  //             icon: Icon(Icons.remove),
+  //             onPressed: () async {
+  //               print(await TxQrData().allMessageEntries);
+  //             },
+  //           ),
+  //         ),
+  //         // ListView.builder(
+  //         //   itemBuilder: (BuildContext context, int index) =>
+  //         //       _makeElement(index),
+  //         // ),
+  //       ]),
+  //     );

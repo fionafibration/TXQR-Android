@@ -26,6 +26,7 @@ class TxSliverAppBar extends StatelessWidget {
                   QrImage(
                     data: "v2.1.2 alpha",
                     size: 60,
+                    padding: EdgeInsets.all(4.0),
                     foregroundColor: Colors.black,
                     backgroundColor: Colors.white,
                     version: 1,
