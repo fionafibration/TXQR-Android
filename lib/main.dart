@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 //import 'package:qr_flutter/qr_flutter.dart';
 import 'package:flutter/services.dart';
 import 'package:share/share.dart';
+import 'package:txqrfincrypt/src/app_state_singleton.dart';
 import 'package:txqrfincrypt/src/widgets/recieve.dart';
 import 'package:txqrfincrypt/src/widgets/send.dart';
 
@@ -25,8 +26,6 @@ class HomePage extends StatefulWidget {
 
 class HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
-  String result = "Hey there !";
-  String path = "";
 
   static const platform = const MethodChannel('tx.novalogic.dev/fincrypt');
   final txPageController = PageController(
@@ -35,32 +34,30 @@ class HomePageState extends State<HomePage> {
 
   //static final _notDone = 'DECODE.NOT_DONE';
   // Get the message
-  String _message = 'No Message';
-
   Future<void> _scan(String methodToInvoke) async {
     try {
       String result = await platform.invokeMethod(methodToInvoke);
       setState(() {
         result = result;
-        _message = "A Message was decoded YAY";
+        appData.message = "A Message was decoded YAY";
       });
     } on PlatformException catch (ex) {
       if (ex.code == "PERMISSION_NOT_GRANTED") {
         setState(() {
-          result = "Camera permission was denied";
+          appData.result = "Camera permission was denied";
         });
       } else {
         setState(() {
-          result = "Unknown Error $ex";
+          appData.result = "Unknown Error $ex";
         });
       }
     } on FormatException {
       setState(() {
-        result = "You pressed the back button before scanning anything";
+        appData.result = "You pressed the back button before scanning anything";
       });
     } catch (ex) {
       setState(() {
-        result = "Unknown Error $ex";
+        appData.result = "Unknown Error $ex";
       });
     }
   }
@@ -91,7 +88,7 @@ class HomePageState extends State<HomePage> {
                             color: Colors.blueGrey[600],
                             tooltip: 'Share',
                             onPressed: () {
-                              Share.share(result);
+                              Share.share(appData.result);
                             },
                           ),
                           IconButton(
@@ -119,9 +116,9 @@ class HomePageState extends State<HomePage> {
                             tooltip: 'OutputQR v1',
                             onPressed: () async {
                               String path =
-                                  await platform.invokeMethod('makeQR', result);
+                                  await platform.invokeMethod('makeQR', appData.result);
                               setState(() {
-                                this.path = path;
+                                appData.path = path;
                               });
                             },
                           )
