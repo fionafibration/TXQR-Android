@@ -52,4 +52,24 @@ class TxQrData extends _$TxQrData {
   //bump this number whenever you change or add a table definition
   @override
   int get schemaVersion => 1;
+
+  // returns the generated id
+  Future<int> addTodoEntry(MessagesCompanion entry) {
+    return into(messages).insert(entry);
+  }
+
+  // loads all message entries
+  Future<List<Message>> get allTodoEntries => select(messages).get();
+
+  // loads all messages sorted alphabetically
+  Future<List<Message>> sortEntriesAlphabetically() {
+    return (select(messages)..orderBy([(t) => OrderingTerm(expression: t.title)]))
+        .get();
+  }
+
+  // watches all mesaage entries in a given category. The stream will automatically
+  // emit new items whenever the underlying data changes.
+  Stream<List<Message>> watchEntriesInCategory(int c) {
+    return (select(messages)..where((t) => t.category.equals(c))).watch();
+  }
 }
