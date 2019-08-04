@@ -13,10 +13,13 @@ dependencies:
   qr_flutter: ^2.0.0+51
   path_provider: ^1.1.0
   bottom_navy_bar: ^5.1.0
+  moor_flutter: ^1.6.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  moor_generator:
+  build_runner:
 
 
 # For information on the generic Dart part of this file, see the
