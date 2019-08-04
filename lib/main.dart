@@ -63,6 +63,7 @@ class HomePageState extends State<HomePage> {
     }
   }
 
+  // TODO I need to fix this so that the button set is determined by page context
   void _showModalBottomSheet(BuildContext context) {
     showModalBottomSheet(
         context: context,
@@ -70,14 +71,12 @@ class HomePageState extends State<HomePage> {
             clipBehavior: Clip.antiAlias,
             color: Colors.white,
             child: Container(
-              height: 220,
+              //height: 220, TODO this needs to be worked on too
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
                   bottomMenuHeader(),
                   Expanded(
-                    //child: SizedBox(
-                    //height: 80,
                     child: Wrap(
                       direction: Axis.horizontal,
                       spacing: 10,
@@ -149,9 +148,18 @@ class HomePageState extends State<HomePage> {
                             print(await TxQrData().allMessageEntries);
                           },
                         ),
+                        IconButton(
+                          iconSize: 50,
+                          icon: Icon(Icons.delete),
+                          color: Colors.blueGrey[600],
+                          tooltip: "DEBUG BUTTON 3",
+                          onPressed: () async {
+                            TxQrData().deleteMessage(150);
+                            appData.onDataInsert();
+                          },
+                        ),
                       ],
                     ),
-                    //),
                   ),
                 ],
               ),

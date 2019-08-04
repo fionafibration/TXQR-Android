@@ -37,7 +37,7 @@ class Messages extends Table {
   //The message content
   TextColumn get content => text().named('body')();
 
-  //The id of the Codes entry where a realted code can be found, if the item is of category 1
+  //The id of the Codes entry where a realted code can be found, if the item is of category 0
   IntColumn get codeLocationId => integer().nullable()();
 
   //Category 0,1 where 0 is page 0 and 1 is page 1

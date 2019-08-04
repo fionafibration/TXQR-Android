@@ -71,12 +71,32 @@ class SendPageState extends State<SendPage> {
               child: Center(
                 child: Card(
                   child: Padding(
-                    padding: const EdgeInsets.all(30.0),
-                    child: Text(
-                      appData.result,
-                      //result,
-                      style: new TextStyle(
-                          fontSize: 11.0, fontWeight: FontWeight.w600),
+                    padding: const EdgeInsets.all(5.0),
+                    child: Stack(
+                      children: <Widget>[
+                        Align(
+                          alignment: Alignment.center,
+                          child: Text(
+                            appData.messagesList[index].title,
+                            //result,
+                            style: new TextStyle(
+                                fontSize: 11.0, fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                        Align(
+                          alignment: Alignment.bottomRight,
+                          child: ButtonBar(
+                            children: <Widget>[
+                              FlatButton(
+                                child: Text("Open"),
+                                onPressed: () {
+                                  //TODO open dialog
+                                },
+                              )
+                            ],
+                          ),
+                        )
+                      ],
                     ),
                   ),
                 ),
