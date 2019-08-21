@@ -148,3 +148,70 @@ THIS IS WASTE CODE THAT I MAY WANT, DO NOT DELTETE FROM THIS FILE
   //         // ),
   //       ]),
   //     );
+
+
+
+
+  child: Column(
+          children: <Widget>[
+            Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: <Widget>[
+                  Text(
+                    "A Title Worth Opening",
+                    style: new TextStyle(
+                        fontSize: 24.0, fontWeight: FontWeight.w400),
+                  )
+                ]),
+            Row()
+            // SizedBox(
+            //   height: 20,
+            //   child: Text(appData.path),
+            // ),
+            // SizedBox(
+            //   width: double.infinity,
+            //   child: Center(
+            //     child: Card(
+            //       child: Padding(
+            //         padding: const EdgeInsets.all(5.0),
+            //         child: Stack(
+            //           children: <Widget>[
+            //             Align(
+            //               alignment: Alignment.center,
+            //               child: Text(
+            //                 appData.messagesList[index].title,
+            //                 //result,
+            //                 style: new TextStyle(
+            //                     fontSize: 11.0, fontWeight: FontWeight.w600),
+            //               ),
+            //             ),
+            //             Align(
+            //               alignment: Alignment.bottomRight,
+            //               child: ButtonBar(
+            //                 children: <Widget>[
+            //                   FlatButton(
+            //                     child: Text("Open"),
+            //                     onPressed: () {
+            //                       //TODO open dialog
+            //                     },
+            //                   )
+            //                 ],
+            //               ),
+            //             )
+            //           ],
+            //         ),
+            //       ),
+            //     ),
+            //   ),
+            // ),
+            // SizedBox(
+            //   height: 20,
+            // ),
+            // SizedBox(
+            //   height: 50,
+            //   child: Text(appData.message),
+            // ),
+          ],
+        ),

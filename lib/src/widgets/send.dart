@@ -59,57 +59,58 @@ class SendPageState extends State<SendPage> {
     return Container(
       padding: EdgeInsets.all(5.0),
       child: SafeArea(
-        //width: 380,
-        child: Column(
-          children: <Widget>[
-            SizedBox(
-              height: 20,
-              child: Text(appData.path),
-            ),
-            SizedBox(
-              width: double.infinity,
-              child: Center(
-                child: Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(5.0),
-                    child: Stack(
+        child: Card(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            mainAxisSize: MainAxisSize.max,
+            children: <Widget>[
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  SizedBox(
+                    width: 120,
+                  )
+                ],
+              ),
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Padding(
+                    padding: EdgeInsets.all(10),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.max,
+                      crossAxisAlignment: CrossAxisAlignment.end,
                       children: <Widget>[
-                        Align(
-                          alignment: Alignment.center,
-                          child: Text(
-                            appData.messagesList[index].title,
-                            //result,
-                            style: new TextStyle(
-                                fontSize: 11.0, fontWeight: FontWeight.w600),
-                          ),
-                        ),
-                        Align(
-                          alignment: Alignment.bottomRight,
-                          child: ButtonBar(
-                            children: <Widget>[
-                              FlatButton(
-                                child: Text("Open"),
-                                onPressed: () {
-                                  //TODO open dialog
-                                },
-                              )
-                            ],
-                          ),
+                        Text(
+                          appData.messagesList[index].title,
+                          style: TextStyle(
+                              fontSize: 24, fontWeight: FontWeight.w400),
                         )
                       ],
                     ),
                   ),
-                ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    mainAxisSize: MainAxisSize.max,
+                    children: <Widget>[
+                      FlatButton(
+                        child: Text(
+                          "Open",
+                          style: TextStyle(
+                            fontSize: 20,
+                          ),
+                        ),
+                        onPressed: () {
+                          //TODO open dialog
+                        },
+                      ),
+                    ],
+                  ),
+                ],
               ),
-            ),
-            SizedBox(
-              height: 20,
-            ),
-            SizedBox(
-              height: 50,
-              child: Text(appData.message),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
