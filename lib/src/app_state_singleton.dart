@@ -4,6 +4,8 @@ import 'package:txqrfincrypt/src/tx_database.dart';
 class AppData {
   static final AppData _appData = new AppData._internal();
   List<Message> messagesList = [];
+  List<Message> outgoingMessagesList = [];
+  List<Message> incomingMessagesList = [];
 
   List<Function> callbacks = [];
 

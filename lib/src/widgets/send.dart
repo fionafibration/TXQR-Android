@@ -36,11 +36,11 @@ class SendPageState extends State<SendPage> {
         if (dataSnapshot.hasError) {
           return Text('Error: ${dataSnapshot.error}');
         }
-        appData.messagesList = dataSnapshot.data;
+        appData.outgoingMessagesList = dataSnapshot.data;
         appData.callbacks.add(() {
           setState(() {
             print("b00p");
-            appData.messagesList = dataSnapshot.data;
+            appData.outgoingMessagesList = dataSnapshot.data;
           });
         });
         return txSliverList();
